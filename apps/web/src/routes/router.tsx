@@ -1,10 +1,15 @@
 import { createBrowserRouter } from "react-router-dom";
 import { RequireAdmin, RequireAuth } from "./guards";
+import { LoginPage } from "../features/auth/LoginPage";
+import { RegisterPage } from "../features/auth/RegisterPage";
+import { VerifyPage } from "../features/auth/VerifyPage";
 
 export const router = createBrowserRouter([
   { path: "/", element: <div>Landing — TODO</div> },
-  { path: "/login", element: <div>Login — TODO Phase 1</div> },
-  { path: "/register", element: <div>Register — TODO Phase 1</div> },
+  { path: "/login", element: <LoginPage /> },
+  { path: "/register", element: <RegisterPage /> },
+  { path: "/verify/:id", element: <VerifyPage /> },
+  { path: "/forgot", element: <div>Forgot — Phase 1 polish</div> },
   {
     element: <RequireAuth />,
     children: [
