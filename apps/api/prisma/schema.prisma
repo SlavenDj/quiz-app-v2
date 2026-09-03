@@ -104,6 +104,7 @@ model Attempt {
   score       Int       @default(0)
   maxScore    Int
   durationSec Int?
+  playOrder   String    @default("[]")
   answersJson String    @default("[]")
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   quiz        Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)

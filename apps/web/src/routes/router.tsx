@@ -3,6 +3,12 @@ import { RequireAdmin, RequireAuth } from "./guards";
 import { LoginPage } from "../features/auth/LoginPage";
 import { RegisterPage } from "../features/auth/RegisterPage";
 import { VerifyPage } from "../features/auth/VerifyPage";
+import { ModuleGrid } from "../features/quiz/ModuleGrid";
+import { ModuleDetail } from "../features/quiz/ModuleDetail";
+import { QuizStart } from "../features/quiz/QuizStart";
+import { QuizPlay } from "../features/quiz/QuizPlay";
+import { QuizResult } from "../features/quiz/QuizResult";
+import { Leaderboard } from "../features/quiz/Leaderboard";
 
 export const router = createBrowserRouter([
   { path: "/", element: <div>Landing — TODO</div> },
@@ -13,12 +19,12 @@ export const router = createBrowserRouter([
   {
     element: <RequireAuth />,
     children: [
-      { path: "/home", element: <div>Module grid — Phase 2</div> },
-      { path: "/modules/:id", element: <div>Module detail — Phase 2</div> },
-      { path: "/quiz/:id", element: <div>Quiz start — Phase 2</div> },
-      { path: "/quiz/:id/play", element: <div>Quiz play — Phase 2</div> },
-      { path: "/results/:attemptId", element: <div>Result — Phase 2</div> },
-      { path: "/leaderboard", element: <div>Leaderboard — Phase 2</div> },
+      { path: "/home", element: <ModuleGrid /> },
+      { path: "/modules/:id", element: <ModuleDetail /> },
+      { path: "/quiz/:id", element: <QuizStart /> },
+      { path: "/quiz/:id/play", element: <QuizPlay /> },
+      { path: "/results/:attemptId", element: <QuizResult /> },
+      { path: "/leaderboard", element: <Leaderboard /> },
     ],
   },
   {
