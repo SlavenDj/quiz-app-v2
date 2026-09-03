@@ -9,6 +9,9 @@ import { QuizStart } from "../features/quiz/QuizStart";
 import { QuizPlay } from "../features/quiz/QuizPlay";
 import { QuizResult } from "../features/quiz/QuizResult";
 import { Leaderboard } from "../features/quiz/Leaderboard";
+import { AdminModules } from "../features/admin/AdminModules";
+import { AdminQuizzes } from "../features/admin/AdminQuizzes";
+import { EditQuiz } from "../features/admin/EditQuiz";
 
 export const router = createBrowserRouter([
   { path: "/", element: <div>Landing — TODO</div> },
@@ -30,7 +33,11 @@ export const router = createBrowserRouter([
   {
     path: "/admin",
     element: <RequireAdmin />,
-    children: [{ path: "modules", element: <div>Admin modules — Phase 3</div> }],
+    children: [
+      { path: "modules", element: <AdminModules /> },
+      { path: "modules/:id", element: <AdminQuizzes /> },
+      { path: "quiz/:id/edit", element: <EditQuiz /> },
+    ],
   },
   { path: "*", element: <div>404</div> },
 ]);
