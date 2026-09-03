@@ -87,6 +87,79 @@ async function main() {
     console.log({ questions: [q1.id, q2.id] });
   }
   console.log({ admin: admin.email, module: mod.id, quiz: quiz.id });
+
+  // Demo student (idempotent)
+  const studentHash = await bcrypt.hash("password123", 12);
+  const student = await prisma.user.upsert({
+    where: { emailNormalized: "student@gmail.com" },
+    update: {},
+    create: {
+      email: "student@gmail.com",
+      emailNormalized: "student@gmail.com",
+      passwordHash: studentHash,
+      firstName: "Demo",
+      lastName: "Student",
+      country: "Bosnia",
+      city: "Sarajevo",
+      role: "student",
+      emailVerifiedAt: new Date(),
+    },
+  });
+
+  // Ensure Demo kviz has its 3 questions (guard by bodyHtml lookup)
+  const bodies = [
+    "<p>Koliko je 2 + 2?</p>",
+    "<p>Koji su parni brojevi?</p>",
+    "<p>Glavni grad BiH?</p>",
+  ];
+  for (const [i, bodyHtml] of bodies.entries()) {
+    const existing = await prisma.question.findFirst({
+      where: { bodyHtml, quizzes: { some: { quizId: quiz.id } } },
+    });
+    if (existing) continue;
+    if (i === 0) {
+      await prisma.question.create({
+        data: {
+          bodyHtml,
+          type: "single",
+          quizzes: { create: { quizId: quiz.id, sortOrder: i } },
+          answers: {
+            create: [
+              { body: "3", isCorrect: false },
+              { body: "4", isCorrect: true },
+              { body: "5", isCorrect: false },
+            ],
+          },
+        },
+      });
+    } else if (i === 1) {
+      await prisma.question.create({
+        data: {
+          bodyHtml,
+          type: "multiple",
+          quizzes: { create: { quizId: quiz.id, sortOrder: i } },
+          answers: {
+            create: [
+              { body: "2", isCorrect: true },
+              { body: "3", isCorrect: false },
+              { body: "4", isCorrect: true },
+            ],
+          },
+        },
+      });
+    } else {
+      await prisma.question.create({
+        data: {
+          bodyHtml,
+          type: "text",
+          expectedText: "Sarajevo",
+          quizzes: { create: { quizId: quiz.id, sortOrder: i } },
+        },
+      });
+    }
+    console.log({ seededQuestion: bodyHtml });
+  }
+  console.log({ student: student.email });
 }
 
 main().finally(() => prisma.$disconnect());

@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-nav: #AD45D1;
+  --brand-quiz: #835B92;
+  --brand-auth: #955CA6;
+  --brand-muted: #B08BBE;
+}
