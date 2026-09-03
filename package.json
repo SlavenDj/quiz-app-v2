@@ -1,0 +1,14 @@
+{
+  "name": "quiz-app-v2",
+  "private": true,
+  "version": "0.1.0",
+  "description": "PLUS ULTRA Quiz rebuild — Prisma + Express + React, SQLite local / MySQL prod",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev:api": "npm run dev --workspace apps/api",
+    "dev:web": "npm run dev --workspace apps/web",
+    "build": "npm run build --workspaces",
+    "prisma:push:sqlite": "npm run db:push --workspace apps/api",
+    "prisma:seed": "npm run db:seed --workspace apps/api"
+  }
+}

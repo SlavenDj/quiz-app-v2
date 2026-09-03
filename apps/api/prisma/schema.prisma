@@ -1,0 +1,113 @@
+datasource db {
+  provider = env("DB_PROVIDER")
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                  Int       @id @default(autoincrement())
+  email               String
+  emailNormalized     String    @unique
+  passwordHash        String
+  firstName           String
+  lastName            String
+  country             String?
+  city                String?
+  role                String    @default("student")
+  emailVerifiedAt     DateTime?
+  verificationHash    String?
+  verificationExpires DateTime?
+  resetHash           String?
+  resetExpires        DateTime?
+  bio                 String?
+  nickname            String?
+  username            String?
+  avatarFile          String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  attempts            Attempt[]
+}
+
+model Module {
+  id           Int          @id @default(autoincrement())
+  name         String
+  shortDesc    String
+  longDesc     String
+  editionLabel String
+  moduleNumber Int
+  startAt      DateTime
+  endAt        DateTime
+  status       String       @default("Locked")
+  quizzes      QuizModule[]
+}
+
+model Quiz {
+  id           Int            @id @default(autoincrement())
+  name         String
+  description  String
+  introHtml    String         @default("")
+  timeLimitSec Int            @default(600)
+  maxAttempts  Int            @default(3)
+  passPct      Int            @default(50)
+  modules      QuizModule[]
+  questions    QuizQuestion[]
+  attempts     Attempt[]
+}
+
+model QuizModule {
+  quizId   Int
+  moduleId Int
+  quiz     Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@id([quizId, moduleId])
+}
+
+model Question {
+  id           Int            @id @default(autoincrement())
+  bodyHtml     String
+  type         String
+  expectedText String?
+  imageFile    String?
+  quizzes      QuizQuestion[]
+  answers      Answer[]
+}
+
+model QuizQuestion {
+  quizId     Int
+  questionId Int
+  sortOrder  Int      @default(0)
+  quiz       Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([quizId, questionId])
+}
+
+model Answer {
+  id         Int      @id @default(autoincrement())
+  questionId Int
+  body       String
+  isCorrect  Boolean  @default(false)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model Attempt {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  quizId      Int
+  attemptNo   Int
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+  score       Int       @default(0)
+  maxScore    Int
+  durationSec Int?
+  answersJson Json      @default("[]")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz        Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, quizId, attemptNo])
+  @@index([quizId, score])
+}
