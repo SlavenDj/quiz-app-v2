@@ -14,6 +14,7 @@
     "test": "vitest run",
     "db:generate:mysql": "prisma generate --schema=prisma/schema.mysql.prisma",
     "migrate:mysql": "prisma migrate dev --schema=prisma/schema.mysql.prisma",
+    "postmigrate:mysql": "prisma generate",
     "migrate:deploy": "prisma migrate deploy --schema=prisma/schema.mysql.prisma"
   },
   "dependencies": {

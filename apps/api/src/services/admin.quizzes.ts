@@ -2,6 +2,34 @@ import { prisma } from "../lib/prisma.js";
 import { httpError, imageUrl } from "./common.js";
 import { UPLOAD_DIR, removeUploadedFile } from "./uploads.js";
 
+export async function getModuleQuizzesAdmin(moduleId: number) {
+  const mod = await prisma.module.findUnique({
+    where: { id: moduleId },
+    include: {
+      quizzes: {
+        include: {
+          quiz: { include: { _count: { select: { questions: true } } } },
+        },
+      },
+    },
+  });
+  if (!mod) throw httpError(404, "Modul nije pronadjen.");
+  return {
+    id: mod.id,
+    name: mod.name,
+    quizzes: mod.quizzes.map(({ quiz }) => ({
+      quizId: quiz.id,
+      quizName: quiz.name,
+      description: quiz.description,
+      status: quiz.status,
+      scheduledStartAt: quiz.scheduledStartAt,
+      timeLimitSec: quiz.timeLimitSec,
+      maxAttempts: quiz.maxAttempts,
+      questionCount: quiz._count.questions,
+    })),
+  };
+}
+
 export async function getQuizDetail(quizId: number) {
   const quiz = await prisma.quiz.findUnique({
     where: { id: quizId },
@@ -32,10 +60,11 @@ export async function getQuizDetail(quizId: number) {
 
 export async function createQuiz(
   moduleId: number,
-  data: { name: string; description: string; introHtml?: string; timeLimitSec?: number; maxAttempts?: number; passPct?: number }
+  data: { name: string; description: string; introHtml?: string; timeLimitSec?: number; maxAttempts?: number; passPct?: number; status?: string; scheduledStartAt?: string | null }
 ) {
   const mod = await prisma.module.findUnique({ where: { id: moduleId } });
   if (!mod) throw httpError(404, "Modul nije pronadjen.");
+  if (data.status && !["draft", "published"].includes(data.status)) throw httpError(400, "Neispravan status.");
   const quiz = await prisma.quiz.create({
     data: {
       name: data.name,
@@ -44,6 +73,8 @@ export async function createQuiz(
       timeLimitSec: data.timeLimitSec ?? 600,
       maxAttempts: data.maxAttempts ?? 3,
       passPct: data.passPct ?? 50,
+      status: data.status ?? "published",
+      scheduledStartAt: data.scheduledStartAt ? new Date(data.scheduledStartAt) : null,
       modules: { create: { moduleId } },
     },
   });
@@ -52,11 +83,19 @@ export async function createQuiz(
 
 export async function updateQuiz(
   quizId: number,
-  data: Partial<{ name: string; description: string; introHtml: string; timeLimitSec: number; maxAttempts: number; passPct: number }>
+  data: Partial<{ name: string; description: string; introHtml: string; timeLimitSec: number; maxAttempts: number; passPct: number; status: string; scheduledStartAt: string | null }>
 ) {
   const quiz = await prisma.quiz.findUnique({ where: { id: quizId } });
   if (!quiz) throw httpError(404, "Kviz nije pronadjen.");
-  return prisma.quiz.update({ where: { id: quizId }, data });
+  if (data.status && !["draft", "published"].includes(data.status)) throw httpError(400, "Neispravan status.");
+  const { scheduledStartAt, ...rest } = data;
+  return prisma.quiz.update({
+    where: { id: quizId },
+    data: {
+      ...rest,
+      scheduledStartAt: scheduledStartAt === undefined ? undefined : scheduledStartAt ? new Date(scheduledStartAt) : null,
+    },
+  });
 }
 
 /** Full removal of a quiz: attempts, links, orphan questions (+answers+images).

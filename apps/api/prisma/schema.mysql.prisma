@@ -26,6 +26,7 @@ model User {
   nickname            String?
   username            String?
   avatarFile          String?
+  notifyNewQuiz       Boolean   @default(true)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   attempts            Attempt[]
@@ -52,6 +53,8 @@ model Quiz {
   timeLimitSec Int            @default(600)
   maxAttempts  Int            @default(3)
   passPct      Int            @default(50)
+  status       String         @default("published")
+  scheduledStartAt DateTime?
   modules      QuizModule[]
   questions    QuizQuestion[]
   attempts     Attempt[]

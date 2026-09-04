@@ -34,6 +34,7 @@ meRoutes.patch(
       bio: z.string().max(500).optional(),
       nickname: z.string().max(20).optional(),
       username: z.string().max(30).optional(),
+      notifyNewQuiz: z.boolean().optional(),
     })
   ),
   asyncHandler(async (req: AuthRequest, res) => {

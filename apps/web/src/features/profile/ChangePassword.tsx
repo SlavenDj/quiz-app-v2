@@ -6,6 +6,7 @@ import { useChangePassword } from "./api";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { TextInput } from "../../components/ui/TextInput";
+import { PasswordStrength } from "../../components/PasswordStrength";
 
 const schema = z
   .object({
@@ -28,8 +29,10 @@ export function ChangePassword() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  const newPasswordValue = watch("newPassword", "");
 
   async function onSubmit(values: FormValues) {
     setMessage(null);
@@ -66,6 +69,7 @@ export function ChangePassword() {
           error={errors.newPassword?.message}
           {...register("newPassword")}
         />
+        <PasswordStrength password={newPasswordValue ?? ""} />
         <TextInput
           id="confirm"
           label="Potvrda lozinke"

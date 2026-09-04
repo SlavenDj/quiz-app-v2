@@ -5,6 +5,7 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
 import * as admin from "../services/admin.service.js";
+import { notifyNewQuizEmails } from "../services/auth.service.js";
 import { htmlString, emptyableHtmlString } from "validation";
 import { UPLOAD_DIR } from "../services/admin.service.js";
 import { cleanupUploadedFile, imageFileFilter, imageFilename } from "../lib/upload.js";
@@ -68,6 +69,14 @@ adminRoutes.delete(
 
 // ---- Quizzes ----
 adminRoutes.get(
+  "/modules/:id/quizzes",
+  validate(idParam(), "params"),
+  asyncHandler(async (req, res) => {
+    res.json(await admin.getModuleQuizzesAdmin(Number(req.params.id)));
+  })
+);
+
+adminRoutes.get(
   "/quizzes/:id",
   validate(idParam(), "params"),
   asyncHandler(async (req, res) => {
@@ -86,10 +95,19 @@ adminRoutes.post(
       timeLimitSec: z.number().min(60).max(3600).default(600),
       maxAttempts: z.number().min(1).max(10).default(3),
       passPct: z.number().min(0).max(100).default(50),
+      status: z.enum(["draft", "published"]).default("published"),
+      scheduledStartAt: z.string().nullable().optional(),
+      notify: z.boolean().optional(),
     })
   ),
   asyncHandler(async (req, res) => {
-    res.status(201).json(await admin.createQuiz(Number(req.params.id), req.body));
+    const { notify, ...quizData } = req.body;
+    const quiz = await admin.createQuiz(Number(req.params.id), quizData);
+    if (notify) {
+      const mod = await admin.listModulesAdmin().then((ms: any[]) => ms.find((m) => m.id === Number(req.params.id)));
+      notifyNewQuizEmails(quiz.name, mod?.name ?? "").catch(() => {});
+    }
+    res.status(201).json(quiz);
   })
 );
 
@@ -104,6 +122,8 @@ adminRoutes.put(
       timeLimitSec: z.number().min(60).max(3600).optional(),
       maxAttempts: z.number().min(1).max(10).optional(),
       passPct: z.number().min(0).max(100).optional(),
+      status: z.enum(["draft", "published"]).optional(),
+      scheduledStartAt: z.string().nullable().optional(),
     })
   ),
   asyncHandler(async (req, res) => {
@@ -116,6 +136,37 @@ adminRoutes.delete(
   validate(idParam(), "params"),
   asyncHandler(async (req, res) => {
     res.json(await admin.deleteQuiz(Number(req.params.id)));
+  })
+);
+
+// ---- Question bank ----
+adminRoutes.get(
+  "/questions",
+  asyncHandler(async (req, res) => {
+    const q = typeof req.query.q === "string" ? req.query.q : undefined;
+    const type = typeof req.query.type === "string" ? req.query.type : undefined;
+    res.json(await admin.searchBank(q, type));
+  })
+);
+
+const quizQuestionParam = z.object({
+  quizId: z.coerce.number().int().positive(),
+  questionId: z.coerce.number().int().positive(),
+});
+
+adminRoutes.post(
+  "/quizzes/:quizId/questions/:questionId/attach",
+  validate(quizQuestionParam, "params"),
+  asyncHandler(async (req, res) => {
+    res.status(201).json(await admin.attachQuestion(Number(req.params.quizId), Number(req.params.questionId)));
+  })
+);
+
+adminRoutes.delete(
+  "/quizzes/:quizId/questions/:questionId/attach",
+  validate(quizQuestionParam, "params"),
+  asyncHandler(async (req, res) => {
+    res.json(await admin.detachQuestion(Number(req.params.quizId), Number(req.params.questionId)));
   })
 );
 

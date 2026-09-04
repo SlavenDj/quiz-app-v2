@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useQuiz } from "./api";
+import { useQuiz, useStartPlay } from "./api";
+import { AttemptHistory } from "./AttemptHistory";
+import { useCountdown } from "../../lib/useCountdown";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -10,6 +13,10 @@ export function QuizStart() {
   const quizId = Number(id);
   const { data, isLoading, error } = useQuiz(quizId);
   const navigate = useNavigate();
+  const startPlay = useStartPlay();
+  const [earlyMsg, setEarlyMsg] = useState<string | null>(null);
+  const countdown = useCountdown(data?.scheduledStartAt ?? null);
+  const scheduledFuture = !!data?.scheduledStartAt && countdown !== null;
 
   if (isLoading) return <Spinner label="Ucitavanje..." />;
   if (error) return <p className="page-container text-status-danger">Greska: {(error as Error).message}</p>;
@@ -37,19 +44,40 @@ export function QuizStart() {
           </Badge>
         </div>
         <div className="mt-5">
+          {scheduledFuture && (
+            <p className="mb-2 rounded-card bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+              Počinje za {countdown}
+            </p>
+          )}
+          {earlyMsg && <p className="mb-2 rounded-card bg-red-50 px-4 py-3 text-sm text-status-danger">{earlyMsg}</p>}
           {data.canAttempt ? (
             <Button
               variant="primary"
-              onClick={() => navigate(`/quiz/${quizId}/play`)}
+              disabled={scheduledFuture || startPlay.isPending}
+              onClick={() =>
+                startPlay.mutate(quizId, {
+                  onSuccess: () => navigate(`/quiz/${quizId}/play`),
+                  onError: (e: any) => {
+                    const details = e?.details ?? e?.response?.details;
+                    const startsAt = details?.startsAt;
+                    setEarlyMsg(
+                      startsAt ? `Kviz još nije počeo. Počinje: ${new Date(startsAt).toLocaleString()}` : (e as Error).message
+                    );
+                  },
+                })
+              }
               className="min-h-[44px] w-full text-base sm:w-auto"
             >
-              Zapocni kviz
+              {scheduledFuture ? `Počinje za ${countdown}` : "Zapocni kviz"}
             </Button>
           ) : (
             <p className="rounded-card bg-gray-100 px-4 py-3 text-sm text-gray-600">Nema vise pokusaja.</p>
           )}
         </div>
       </Card>
+      <div className="mx-auto mt-6 w-full max-w-2xl">
+        <AttemptHistory quizId={quizId} />
+      </div>
     </div>
   );
 }

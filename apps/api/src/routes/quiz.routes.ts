@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { asyncHandler } from "../middleware/asyncHandler.js";
-import { requireAuth, type AuthRequest } from "../middleware/requireAuth.js";
+import { requireAuth, requireRole, type AuthRequest } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
 import { submitSchema } from "validation";
 import * as quiz from "../services/quiz.service.js";
@@ -81,11 +81,48 @@ quizRoutes.get(
 );
 
 quizRoutes.get(
+  "/quizzes/:id/attempts",
+  validate(idParam, "params"),
+  asyncHandler(async (req: AuthRequest, res) => {
+    res.json(await quiz.getMyAttempts(Number(req.params.id), req.user!.id));
+  })
+);
+
+quizRoutes.get(
   "/leaderboard",
+  validate(
+    z.object({
+      limit: z.coerce.number().optional(),
+      edition: z.string().min(1).max(20).optional(),
+      month: z.string().regex(/^\d{4}-\d{2}$/).optional(),
+    }),
+    "query"
+  ),
   asyncHandler(async (req, res) => {
     const raw = Number(req.query.limit ?? 50);
     const limit = Math.min(Math.max(Number.isFinite(raw) ? raw : 50, 1), 200);
-    res.json(await quiz.getLeaderboard(limit));
+    res.json(
+      await quiz.getLeaderboard(limit, {
+        edition: req.query.edition as string | undefined,
+        month: req.query.month as string | undefined,
+      })
+    );
+  })
+);
+
+quizRoutes.get(
+  "/review-deck",
+  asyncHandler(async (req: AuthRequest, res) => {
+    res.json(await quiz.getReviewDeck(req.user!.id));
+  })
+);
+
+quizRoutes.get(
+  "/admin/quizzes/:id/stats",
+  requireRole("admin"),
+  validate(idParam, "params"),
+  asyncHandler(async (req, res) => {
+    res.json(await quiz.getQuizStats(Number(req.params.id)));
   })
 );
 

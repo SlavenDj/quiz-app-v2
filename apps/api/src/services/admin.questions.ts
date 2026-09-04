@@ -4,6 +4,44 @@ import { removeUploadedFile } from "./uploads.js";
 
 const QUESTION_TYPES = ["single", "multiple", "text"];
 
+export async function searchBank(q?: string, type?: string) {
+  if (type && !QUESTION_TYPES.includes(type)) throw httpError(400, "Neispravan tip pitanja.");
+  const questions = await prisma.question.findMany({
+    where: {
+      ...(q ? { bodyHtml: { contains: q } } : {}),
+      ...(type ? { type } : {}),
+    },
+    select: { id: true, bodyHtml: true, type: true, _count: { select: { quizzes: true } } },
+    take: 50,
+    orderBy: { id: "desc" },
+  });
+  return questions.map((x) => ({ id: x.id, bodyHtml: x.bodyHtml, type: x.type, quizCount: x._count.quizzes }));
+}
+
+export async function attachQuestion(quizId: number, questionId: number) {
+  const quiz = await prisma.quiz.findUnique({ where: { id: quizId } });
+  if (!quiz) throw httpError(404, "Kviz nije pronadjen.");
+  const question = await prisma.question.findUnique({ where: { id: questionId } });
+  if (!question) throw httpError(404, "Pitanje nije pronadjeno.");
+  const existing = await prisma.quizQuestion.findUnique({
+    where: { quizId_questionId: { quizId, questionId } },
+  });
+  if (existing) throw httpError(409, "Pitanje je vec dodano u kviz.");
+  const agg = await prisma.quizQuestion.aggregate({ where: { quizId }, _max: { sortOrder: true } });
+  return prisma.quizQuestion.create({
+    data: { quizId, questionId, sortOrder: (agg._max.sortOrder ?? -1) + 1 },
+  });
+}
+
+export async function detachQuestion(quizId: number, questionId: number) {
+  const existing = await prisma.quizQuestion.findUnique({
+    where: { quizId_questionId: { quizId, questionId } },
+  });
+  if (!existing) throw httpError(404, "Pitanje nije pronadjeno.");
+  await prisma.quizQuestion.delete({ where: { quizId_questionId: { quizId, questionId } } });
+  return { ok: true };
+}
+
 export async function addQuestion(
   quizId: number,
   data: { bodyHtml: string; type: string; expectedText?: string }

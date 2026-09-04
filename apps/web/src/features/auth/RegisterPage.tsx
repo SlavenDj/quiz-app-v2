@@ -8,15 +8,17 @@ import { useRegister } from "./hooks";
 import { useAuthStore } from "../../stores/auth";
 import { Button } from "../../components/ui/Button";
 import { TextInput } from "../../components/ui/TextInput";
+import { PasswordStrength } from "../../components/PasswordStrength";
 
 export function RegisterPage() {
   const navigate = useNavigate();
   const reg = useRegister();
   const user = useAuthStore((s) => s.user);
   const [localError, setLocalError] = useState<string | null>(null);
-  const { register, handleSubmit, formState: { errors } } = useForm<z.input<typeof registerSchema>>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<z.input<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
   });
+  const passwordValue = watch("password", "");
 
   if (user) {
     return <Navigate to={user.role === "admin" ? "/admin/modules" : "/home"} replace />;
@@ -70,6 +72,7 @@ export function RegisterPage() {
           error={errors.password?.message}
           {...register("password")}
         />
+        <PasswordStrength password={passwordValue ?? ""} />
         <TextInput
           id="country"
           label="Država"

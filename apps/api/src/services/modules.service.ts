@@ -79,7 +79,9 @@ export async function getModuleDetail(moduleId: number, userId: number) {
     startAt: mod.startAt,
     endAt: mod.endAt,
     status: mod.status,
-    quizzes: mod.quizzes.map(({ quiz }) => {
+    quizzes: mod.quizzes
+      .filter(({ quiz }) => quiz.status === "published")
+      .map(({ quiz }) => {
       const done = quiz.attempts.filter((a) => a.submittedAt);
       return {
         quizId: quiz.id,

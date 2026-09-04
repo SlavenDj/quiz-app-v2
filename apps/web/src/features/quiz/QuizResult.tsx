@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { useAttempt } from "./api";
 import { Badge } from "../../components/ui/Badge";
+import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Spinner } from "../../components/ui/Spinner";
 
@@ -58,16 +59,20 @@ export function QuizResult() {
                 <p className="mt-2 min-w-0 break-words text-sm text-gray-700">Vas odgovor: {r.userText ?? "-"}</p>
               ) : (
                 <ul className="mt-2 flex flex-col gap-2">
-                  {r.answers.map((a: any) => (
-                    <li
-                      key={a.id}
-                      className="flex min-w-0 flex-wrap items-center gap-2 rounded-card border border-gray-100 bg-gray-50 px-3 py-2 text-sm"
-                    >
-                      <span className="min-w-0 flex-1 break-words text-gray-900">{a.body}</span>
-                      {a.isCorrect && <Badge tone="success">tacno</Badge>}
-                      {r.userAnswerIds.includes(a.id) && <Badge tone="brand">vas izbor</Badge>}
-                    </li>
-                  ))}
+                  {r.answers.map((a: any) => {
+                    const picked = (r.userAnswerIds ?? []).includes(a.id);
+                    return (
+                      <li
+                        key={a.id}
+                        className="flex min-w-0 flex-wrap items-center gap-2 rounded-card border border-gray-100 bg-gray-50 px-3 py-2 text-sm"
+                      >
+                        <span className="min-w-0 flex-1 break-words text-gray-900">{a.body}</span>
+                        {a.isCorrect && picked && <Badge tone="success">Tačno</Badge>}
+                        {a.isCorrect && !picked && <Badge tone="brand">Propušteno</Badge>}
+                        {!a.isCorrect && picked && <Badge tone="danger">Pogrešno</Badge>}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </Card>
@@ -75,6 +80,9 @@ export function QuizResult() {
         })}
       </div>
       <div className="mx-auto mt-6 flex w-full max-w-2xl flex-col gap-3 sm:flex-row">
+        <Button variant="outline" onClick={() => window.print()} className="flex-1">
+          Štampaj
+        </Button>
         <Link
           to="/home"
           className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded border border-brand-quiz bg-transparent px-4 py-2 font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20"

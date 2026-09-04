@@ -11,6 +11,7 @@ export async function getQuizMeta(quizId: number, userId: number) {
     },
   });
   if (!quiz) throw httpError(404, "Kviz nije pronadjen.");
+  if (quiz.status !== "published") throw httpError(404, "Kviz nije pronadjen.");
   const done = quiz.attempts.filter((a) => a.submittedAt);
   return {
     id: quiz.id,
@@ -20,6 +21,7 @@ export async function getQuizMeta(quizId: number, userId: number) {
     timeLimitSec: quiz.timeLimitSec,
     maxAttempts: quiz.maxAttempts,
     passPct: quiz.passPct,
+    scheduledStartAt: quiz.scheduledStartAt,
     questionCount: quiz._count.questions,
     moduleId: quiz.modules[0]?.moduleId ?? null,
     myAttempts: done.length,
@@ -43,6 +45,13 @@ export async function startOrResumePlay(quizId: number, userId: number) {
     },
   });
   if (!quiz) throw httpError(404, "Kviz nije pronadjen.");
+  if (quiz.status !== "published") throw httpError(404, "Kviz nije pronadjen.");
+  if (quiz.scheduledStartAt && quiz.scheduledStartAt > new Date()) {
+    const err: any = new Error("Kviz još nije počeo.");
+    err.status = 403;
+    err.details = { startsAt: quiz.scheduledStartAt };
+    throw err;
+  }
   if (quiz.questions.length === 0) throw httpError(400, "Kviz nema pitanja.");
 
   // Time-gating: quiz is playable only if at least one linked module is
@@ -227,6 +236,22 @@ export async function submitAttempt(
   };
 }
 
+export async function getMyAttempts(quizId: number, userId: number) {
+  const quiz = await prisma.quiz.findUnique({ where: { id: quizId } });
+  if (!quiz) throw httpError(404, "Kviz nije pronadjen.");
+  const rows = await prisma.attempt.findMany({
+    where: { quizId, userId, submittedAt: { not: null } },
+    orderBy: { attemptNo: "asc" },
+  });
+  return rows.map((a) => ({
+    attemptNo: a.attemptNo,
+    score: a.score,
+    maxScore: a.maxScore,
+    durationSec: a.durationSec,
+    submittedAt: a.submittedAt,
+  }));
+}
+
 export async function getAttemptReview(attemptId: number, userId: number) {
   const attempt = await prisma.attempt.findUnique({
     where: { id: attemptId },
@@ -292,9 +317,19 @@ export async function getUserPublic(userId: number) {
   };
 }
 
-export async function getLeaderboard(limit = 50) {
+export async function getLeaderboard(limit = 50, opts?: { edition?: string; month?: string }) {
+  const where: any = { attemptNo: 1, submittedAt: { not: null } };
+  if (opts?.month) {
+    const [y, m] = opts.month.split("-").map(Number);
+    const start = new Date(Date.UTC(y, m - 1, 1));
+    const end = new Date(Date.UTC(m === 12 ? y + 1 : y, m === 12 ? 0 : m, 1));
+    where.submittedAt = { gte: start, lt: end };
+  }
+  if (opts?.edition) {
+    where.quiz = { modules: { some: { module: { editionLabel: opts.edition } } } };
+  }
   const firsts = await prisma.attempt.findMany({
-    where: { attemptNo: 1, submittedAt: { not: null } },
+    where,
     include: { user: true },
   });
   const agg = new Map<
@@ -320,4 +355,111 @@ export async function getLeaderboard(limit = 50) {
     .sort((x, y) => y.totalScore - x.totalScore || x.totalDurationSec - y.totalDurationSec)
     .slice(0, limit)
     .map((r, i) => ({ rank: i + 1, ...r }));
+}
+
+export async function getQuizStats(quizId: number) {
+  const quiz = await prisma.quiz.findUnique({
+    where: { id: quizId },
+    include: { questions: { include: { question: { include: { answers: true } } } } },
+  });
+  if (!quiz) throw httpError(404, "Kviz nije pronadjen.");
+  const attempts = await prisma.attempt.findMany({
+    where: { quizId, submittedAt: { not: null } },
+  });
+  const count = attempts.length;
+  const avgScore = count === 0 ? 0 : attempts.reduce((s, a) => s + a.score, 0) / count;
+  const avgDurationSec =
+    count === 0 ? 0 : attempts.reduce((s, a) => s + (a.durationSec ?? 0), 0) / count;
+  const perQuestion = quiz.questions.map(({ question }) => {
+    let correct = 0;
+    let answered = 0;
+    for (const a of attempts) {
+      let parsed: { questionId: number; answerIds?: number[]; text?: string }[] = [];
+      try {
+        parsed = JSON.parse(a.answersJson);
+        if (!Array.isArray(parsed)) continue;
+      } catch {
+        continue;
+      }
+      const given = parsed.find((p) => p.questionId === question.id);
+      if (!given) continue;
+      answered++;
+      let ok = false;
+      if (question.type === "single") {
+        const correctAns = question.answers.find((x) => x.isCorrect);
+        ok = (given.answerIds?.length ?? 0) === 1 && given.answerIds![0] === correctAns?.id;
+      } else if (question.type === "multiple") {
+        const right = new Set(question.answers.filter((x) => x.isCorrect).map((x) => x.id));
+        const picked = new Set(given.answerIds ?? []);
+        ok = picked.size > 0 && right.size === picked.size && [...right].every((id) => picked.has(id));
+      } else if (question.type === "text") {
+        ok =
+          !!question.expectedText &&
+          normalizeText(given.text ?? "") === normalizeText(question.expectedText);
+      }
+      if (ok) correct++;
+    }
+    return { questionId: question.id, type: question.type, attempts: answered, correct };
+  });
+  return { attempts: count, avgScore, avgDurationSec, perQuestion };
+}
+
+export async function getReviewDeck(userId: number) {
+  const latest = await prisma.attempt.findMany({
+    where: { userId, submittedAt: { not: null } },
+    orderBy: { submittedAt: "desc" },
+    include: { quiz: { include: { questions: { include: { question: { include: { answers: true } } } } } } },
+  });
+  const seen = new Set<number>();
+  const deck: {
+    quizId: number;
+    quizName: string;
+    questionId: number;
+    type: string;
+    bodyHtml: string;
+    answers: { id: number; body: string; isCorrect: boolean }[];
+    expectedText: string | null;
+  }[] = [];
+  for (const a of latest) {
+    if (seen.has(a.quizId)) continue;
+    seen.add(a.quizId);
+    let parsed: { questionId: number; answerIds?: number[]; text?: string }[] = [];
+    try {
+      parsed = JSON.parse(a.answersJson);
+      if (!Array.isArray(parsed)) continue;
+    } catch {
+      continue;
+    }
+    const given = new Map(parsed.map((p) => [p.questionId, p]));
+    for (const { question } of a.quiz.questions) {
+      const g = given.get(question.id);
+      let ok = false;
+      if (g) {
+        if (question.type === "single") {
+          const c = question.answers.find((x) => x.isCorrect);
+          ok = (g.answerIds?.length ?? 0) === 1 && g.answerIds![0] === c?.id;
+        } else if (question.type === "multiple") {
+          const right = new Set(question.answers.filter((x) => x.isCorrect).map((x) => x.id));
+          const picked = new Set(g.answerIds ?? []);
+          ok = picked.size > 0 && right.size === picked.size && [...right].every((id) => picked.has(id));
+        } else if (question.type === "text") {
+          ok =
+            !!question.expectedText &&
+            normalizeText(g.text ?? "") === normalizeText(question.expectedText);
+        }
+      }
+      if (!ok) {
+        deck.push({
+          quizId: a.quizId,
+          quizName: a.quiz.name,
+          questionId: question.id,
+          type: question.type,
+          bodyHtml: question.bodyHtml,
+          answers: question.answers.map((x) => ({ id: x.id, body: x.body, isCorrect: x.isCorrect })),
+          expectedText: question.expectedText,
+        });
+      }
+    }
+  }
+  return deck;
 }

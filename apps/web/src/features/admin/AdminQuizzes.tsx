@@ -1,20 +1,22 @@
 import { Link, useParams } from "react-router-dom";
-import { useState } from "react";
-import { useModule } from "../quiz/api";
-import { useCreateQuiz, useDeleteQuiz } from "./api";
+import { Fragment, useState } from "react";
+import { useAdminModuleQuizzes, useCreateQuiz, useDeleteQuiz } from "./api";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Spinner } from "../../components/ui/Spinner";
 import { TextInput } from "../../components/ui/TextInput";
+import { QuestionBank } from "./QuestionBank";
 
 export function AdminQuizzes() {
   const { id } = useParams();
   const moduleId = Number(id);
-  const { data, isLoading, error } = useModule(moduleId);
+  const { data, isLoading, error } = useAdminModuleQuizzes(moduleId);
   const create = useCreateQuiz(moduleId);
   const del = useDeleteQuiz();
   const [name, setName] = useState("");
+  const [notify, setNotify] = useState(true);
+  const [bankQuizId, setBankQuizId] = useState<number | null>(null);
 
   if (isLoading) return <Spinner />;
   if (error)
@@ -43,7 +45,7 @@ export function AdminQuizzes() {
           className="flex flex-col gap-2 sm:flex-row sm:items-end"
           onSubmit={async (e) => {
             e.preventDefault();
-            await create.mutateAsync({ name, description: "" });
+            await create.mutateAsync({ name, description: "", notify });
             setName("");
           }}
         >
@@ -57,16 +59,33 @@ export function AdminQuizzes() {
               minLength={3}
             />
           </div>
+          <label className="flex items-center gap-1.5 whitespace-nowrap text-sm">
+            <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
+            Obavijesti studente
+          </label>
           <Button type="submit">Dodaj kviz</Button>
         </form>
       </Card>
       {data.quizzes.map((q: any) => (
-        <Card key={q.quizId} className="flex flex-wrap items-center gap-3">
+        <Fragment key={q.quizId}>
+          <Card className="flex flex-wrap items-center gap-3">
           <div className="min-w-0 flex-1">
             <h3 className="break-words font-semibold">{q.quizName}</h3>
             {q.description ? (
               <p className="mt-0.5 break-words text-sm text-gray-600">{q.description}</p>
             ) : null}
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              {q.status ? (
+                <Badge tone={q.status === "published" ? "success" : "neutral"}>
+                  {q.status === "published" ? "Objavljeno" : "Nacrt"}
+                </Badge>
+              ) : null}
+              {q.scheduledStartAt && new Date(q.scheduledStartAt) > new Date() ? (
+                <span className="text-xs text-gray-500">
+                  Zakazano: {new Date(q.scheduledStartAt).toLocaleString()}
+                </span>
+              ) : null}
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
@@ -90,8 +109,17 @@ export function AdminQuizzes() {
             >
               Obrisi
             </Button>
+            <Button
+              variant="outline"
+              className="text-sm"
+              onClick={() => setBankQuizId(bankQuizId === q.quizId ? null : q.quizId)}
+            >
+              Iz banke
+            </Button>
           </div>
         </Card>
+          {bankQuizId === q.quizId ? <QuestionBank quizId={q.quizId} /> : null}
+        </Fragment>
       ))}
     </div>
   );

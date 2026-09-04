@@ -12,12 +12,14 @@ import { ModuleDetail } from "../features/quiz/ModuleDetail";
 import { QuizStart } from "../features/quiz/QuizStart";
 import { QuizPlay } from "../features/quiz/QuizPlay";
 import { QuizResult } from "../features/quiz/QuizResult";
+import { ReviewDeck } from "../features/quiz/ReviewDeck";
 import { UserDetail } from "../features/quiz/UserDetail";
 import { Leaderboard } from "../features/quiz/Leaderboard";
 import { ProfilePage } from "../features/profile/ProfilePage";
 import { AdminModules } from "../features/admin/AdminModules";
 import { AdminQuizzes } from "../features/admin/AdminQuizzes";
 import { EditQuiz } from "../features/admin/EditQuiz";
+import { QuizStats } from "../features/admin/QuizStats";
 import { AdminPreview } from "../features/admin/AdminPreview";
 import NotFound from "../components/NotFound";
 
@@ -44,8 +46,9 @@ export const router = createBrowserRouter(
             { path: "/quiz/:id/play", element: <QuizPlay /> },
             { path: "/results/:attemptId", element: <QuizResult /> },
             { path: "/userinfo/:userId", element: <UserDetail /> },
-            { path: "/leaderboard", element: <Leaderboard /> },
-            { path: "/profile", element: <ProfilePage /> },
+          { path: "/leaderboard", element: <Leaderboard /> },
+          { path: "/profile", element: <ProfilePage /> },
+          { path: "/ponavljanje", element: <ReviewDeck /> },
           ],
         },
         {
@@ -55,8 +58,9 @@ export const router = createBrowserRouter(
             { index: true, element: <Navigate to="/admin/modules" replace /> },
             { path: "modules", element: <AdminModules /> },
             { path: "modules/:id", element: <AdminQuizzes /> },
-            { path: "quiz/:id/edit", element: <EditQuiz /> },
-            { path: "quiz/:id/preview", element: <AdminPreview /> },
+          { path: "quiz/:id/edit", element: <EditQuiz /> },
+          { path: "quiz/:id/stats", element: <QuizStats /> },
+          { path: "quiz/:id/preview", element: <AdminPreview /> },
           ],
         },
         { path: "*", element: <NotFound /> },

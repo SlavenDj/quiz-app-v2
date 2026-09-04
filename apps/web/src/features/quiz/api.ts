@@ -79,6 +79,13 @@ export function useAttempt(id: number) {
   return useQuery({ queryKey: ["attempt", id], queryFn: () => api(`/api/attempts/${id}`) });
 }
 
-export function useLeaderboard() {
-  return useQuery({ queryKey: ["leaderboard"], queryFn: () => api("/api/leaderboard") });
+export function useLeaderboard(edition?: string, month?: string) {
+  const params = new URLSearchParams();
+  if (edition) params.set("edition", edition);
+  if (month) params.set("month", month);
+  const qs = params.toString();
+  return useQuery({
+    queryKey: ["leaderboard", edition ?? "all", month ?? "all"],
+    queryFn: () => api(qs ? `/api/leaderboard?${qs}` : "/api/leaderboard"),
+  });
 }

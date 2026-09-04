@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useLeaderboard } from "./api";
+import { useLeaderboard, useEditions } from "./api";
 import { useAuthStore } from "../../stores/auth";
 import { avatarSrc } from "../../lib/avatar";
 import { Card } from "../../components/ui/Card";
@@ -12,7 +13,10 @@ const MEDAL_STYLES = [
 ];
 
 export function Leaderboard() {
-  const { data, isLoading, error } = useLeaderboard();
+  const [season, setSeason] = useState<string>("");
+  const [month, setMonth] = useState<string>("");
+  const { data, isLoading, error } = useLeaderboard(season || undefined, month || undefined);
+  const { data: editions } = useEditions();
   const currentUserId = useAuthStore((s) => s.user?.id);
   if (isLoading) return <Spinner label="Ucitavanje..." />;
   if (error) return <p className="page-container text-status-danger">Greska: {(error as Error).message}</p>;
@@ -22,6 +26,26 @@ export function Leaderboard() {
   return (
     <div className="page-container">
       <h1 className="mb-4 break-words text-2xl font-bold text-gray-900">Rang lista (prvi pokusaji)</h1>
+      <div className="mb-4 flex flex-wrap gap-2">
+        <select value={season} onChange={(e) => setSeason(e.target.value)} className="rounded border px-2 py-2 text-sm" aria-label="Sezona">
+          <option value="">Sve sezone</option>
+          {(Array.isArray(editions) ? editions : []).map((e: string) => (
+            <option key={e} value={e}>{e}</option>
+          ))}
+        </select>
+        <input
+          type="month"
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          className="rounded border px-2 py-2 text-sm"
+          aria-label="Mjesec"
+        />
+        {(season || month) && (
+          <button onClick={() => { setSeason(""); setMonth(""); }} className="rounded border px-3 py-2 text-sm text-gray-600">
+            Reset
+          </button>
+        )}
+      </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {top3.map((r: any, i: number) => {
           const isMe = r.userId === currentUserId;

@@ -46,6 +46,13 @@ export function useQuizDetail(quizId: number) {
   return useQuery({ queryKey: ["admin", "quiz", quizId], queryFn: () => api(`/api/admin/quizzes/${quizId}`) });
 }
 
+export function useAdminModuleQuizzes(moduleId: number) {
+  return useQuery({
+    queryKey: ["admin", "module-quizzes", moduleId],
+    queryFn: () => api(`/api/admin/modules/${moduleId}/quizzes`),
+  });
+}
+
 export function useCreateQuiz(moduleId: number) {
   const qc = useQueryClient();
   return useMutation({

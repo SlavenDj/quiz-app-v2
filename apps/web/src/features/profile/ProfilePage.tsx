@@ -20,10 +20,11 @@ const schema = z.object({
   bio: z.string().optional(),
   nickname: z.string().optional(),
   username: z.string().optional(),
+  notifyNewQuiz: z.boolean().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
-const FIELDS: (keyof FormValues)[] = [
+const FIELDS: Exclude<keyof FormValues, "notifyNewQuiz">[] = [
   "firstName",
   "lastName",
   "country",
@@ -33,7 +34,7 @@ const FIELDS: (keyof FormValues)[] = [
   "username",
 ];
 
-const FIELD_LABELS: Record<keyof FormValues, string> = {
+const FIELD_LABELS: Record<Exclude<keyof FormValues, "notifyNewQuiz">, string> = {
   firstName: "Ime",
   lastName: "Prezime",
   country: "Država",
@@ -50,6 +51,7 @@ export function ProfilePage() {
   const { register, handleSubmit, reset } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
+  const [notifyNewQuiz, setNotifyNewQuiz] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -63,13 +65,14 @@ export function ProfilePage() {
         nickname: u.nickname ?? "",
         username: u.username ?? "",
       });
+      setNotifyNewQuiz(u.notifyNewQuiz ?? true);
     }
   }, [user, reset]);
 
   async function onSubmit(values: FormValues) {
     setMessage(null);
     try {
-      await mutation.mutateAsync(values);
+      await mutation.mutateAsync({ ...values, notifyNewQuiz });
       setMessage("Profil sačuvan.");
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Greška.");
@@ -127,6 +130,14 @@ export function ProfilePage() {
             >
               {mutation.isPending ? "Čuvanje..." : "Sačuvaj"}
             </Button>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={notifyNewQuiz}
+                onChange={(e) => setNotifyNewQuiz(e.target.checked)}
+              />
+              Obavijesti o novim kvizovima
+            </label>
             {message && (
               <p
                 role="status"

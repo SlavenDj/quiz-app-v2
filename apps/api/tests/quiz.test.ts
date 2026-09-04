@@ -11,6 +11,7 @@ const STUDENT_EMAIL = "quizstudent@gmail.com";
 const PASSWORD = "Password123";
 
 let quizId = 0;
+let testModuleId = 0;
 let qSingle = 0;
 let qMultiple = 0;
 let qText = 0;
@@ -89,6 +90,7 @@ describe("quiz", () => {
       endAt: new Date(now.getTime() + 86400000).toISOString(),
     });
     expect(mod.status).toBe(201);
+    testModuleId = mod.body.id as number;
 
     const quiz = await adminAgent.post(`/api/admin/modules/${mod.body.id}/quizzes`).send({
       name: "Test Quiz",
@@ -199,5 +201,80 @@ describe("quiz", () => {
       ],
     });
     expect(again.status).toBe(400);
+  });
+
+  it("attempts history lists submitted attempts", async () => {
+    const res = await studentAgent!.get(`/api/quizzes/${quizId}/attempts`);
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThanOrEqual(2);
+    expect(res.body[0]).toHaveProperty("attemptNo");
+    expect(res.body[0]).toHaveProperty("score");
+  });
+
+  it("leaderboard filters by month and rejects bad month", async () => {
+    const ok = await studentAgent!.get("/api/leaderboard?month=2026-09");
+    expect(ok.status).toBe(200);
+    expect(Array.isArray(ok.body)).toBe(true);
+    const bad = await studentAgent!.get("/api/leaderboard?month=soon");
+    expect(bad.status).toBe(400);
+  });
+
+  it("admin stats + review deck + bank attach/detach", async () => {
+    const stats = await adminAgent!.get(`/api/admin/quizzes/${quizId}/stats`);
+    expect(stats.status).toBe(200);
+    expect(stats.body.attempts).toBeGreaterThanOrEqual(2);
+    expect(stats.body.perQuestion).toHaveLength(3);
+
+    const deck = await studentAgent!.get("/api/review-deck");
+    expect(deck.status).toBe(200);
+    expect(Array.isArray(deck.body)).toBe(true);
+
+    const bank = await adminAgent!.get("/api/admin/questions?q=Even");
+    expect(bank.status).toBe(200);
+    expect(bank.body.length).toBeGreaterThanOrEqual(1);
+
+    const quiz2 = await adminAgent!.post(`/api/admin/modules/${testModuleId}/quizzes`).send({ name: "Bank Target" });
+    expect(quiz2.status).toBe(201);
+    const targetId = quiz2.body.id as number;
+    const attach = await adminAgent!.post(`/api/admin/quizzes/${targetId}/questions/${qSingle}/attach`);
+    expect(attach.status).toBe(201);
+    const reattach = await adminAgent!.post(`/api/admin/quizzes/${targetId}/questions/${qSingle}/attach`);
+    expect(reattach.status).toBe(409);
+    const detach = await adminAgent!.delete(`/api/admin/quizzes/${targetId}/questions/${qSingle}/attach`);
+    expect(detach.status).toBe(200);
+  });
+
+  it("draft quizzes are hidden from students, scheduled blocks early play", async () => {
+    const mod = await adminAgent!.post("/api/admin/modules").send({
+      name: "Draft Module", shortDesc: "s", longDesc: "l", editionLabel: "2025/26",
+      moduleNumber: 100, startAt: new Date().toISOString(), endAt: new Date(Date.now() + 86400000).toISOString(),
+    });
+    expect(mod.status).toBe(201);
+    const draft = await adminAgent!.post(`/api/admin/modules/${mod.body.id}/quizzes`).send({
+      name: "Draft Quiz", status: "draft",
+    });
+    expect(draft.status).toBe(201);
+    const draftId = draft.body.id as number;
+
+    const list = await studentAgent!.get(`/api/modules/${mod.body.id}`);
+    expect(list.status).toBe(200);
+    expect(list.body.quizzes.map((q: any) => q.quizId)).not.toContain(draftId);
+
+    const meta = await studentAgent!.get(`/api/quizzes/${draftId}`);
+    expect(meta.status).toBe(404);
+
+    const play = await studentAgent!.post(`/api/quizzes/${draftId}/play`);
+    expect(play.status).toBe(404);
+
+    const scheduled = await adminAgent!.post(`/api/admin/modules/${mod.body.id}/quizzes`).send({
+      name: "Future Quiz", status: "published",
+      scheduledStartAt: new Date(Date.now() + 3600000).toISOString(),
+    });
+    expect(scheduled.status).toBe(201);
+    const scheduledId = scheduled.body.id as number;
+    const earlyPlay = await studentAgent!.post(`/api/quizzes/${scheduledId}/play`);
+    expect(earlyPlay.status).toBe(403);
+    expect(earlyPlay.body.details?.startsAt).toBeDefined();
   });
 });

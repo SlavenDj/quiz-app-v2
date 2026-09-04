@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { prisma } from "../lib/prisma.js";
 import { signAccess, signRefresh, verifyRefresh } from "../lib/jwt.js";
-import { sendCodeEmail } from "./mailer.js";
+import { sendCodeEmail, sendQuizPublishedEmail } from "./mailer.js";
 
 const CODE_TTL_MS = 15 * 60 * 1000;
 const ALLOWED_DOMAINS = (process.env.ALLOWED_EMAIL_DOMAINS ?? "gmail.com,outlook.com,hotmail.com,yahoo.com,plusultra.ba").split(",");
@@ -22,8 +22,9 @@ export function toPublicUser(u: {
   lastName: string;
   role: string;
   avatarFile: string | null;
+  notifyNewQuiz?: boolean;
 }) {
-  return { id: u.id, email: u.email, firstName: u.firstName, lastName: u.lastName, role: u.role, avatarFile: u.avatarFile };
+  return { id: u.id, email: u.email, firstName: u.firstName, lastName: u.lastName, role: u.role, avatarFile: u.avatarFile, notifyNewQuiz: u.notifyNewQuiz ?? true };
 }
 
 export async function register(input: {
@@ -133,6 +134,21 @@ export async function refresh(refreshToken: string) {
     access: signAccess({ id: user.id, role: user.role }),
     refresh: signRefresh({ id: user.id }),
   };
+}
+
+export async function notifyNewQuizEmails(quizName: string, moduleName: string) {
+  const recipients = await prisma.user.findMany({
+    where: { role: "student", notifyNewQuiz: true, emailVerifiedAt: { not: null } },
+    select: { email: true },
+  });
+  let sent = 0;
+  for (const r of recipients) {
+    try {
+      await sendQuizPublishedEmail(r.email, quizName, moduleName);
+      sent++;
+    } catch {}
+  }
+  return { sent };
 }
 
 export async function forgotPassword(email: string) {

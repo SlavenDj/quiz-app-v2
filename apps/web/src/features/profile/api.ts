@@ -14,6 +14,7 @@ export interface ProfileUser {
   nickname?: string | null;
   username?: string | null;
   avatarFile?: string | null;
+  notifyNewQuiz?: boolean;
 }
 
 export interface UpdateMeInput {
@@ -24,6 +25,7 @@ export interface UpdateMeInput {
   bio?: string;
   nickname?: string;
   username?: string;
+  notifyNewQuiz?: boolean;
 }
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";

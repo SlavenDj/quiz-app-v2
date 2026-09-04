@@ -49,6 +49,14 @@
   }
 }
 
+@media print {
+  nav,
+  footer,
+  button {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
