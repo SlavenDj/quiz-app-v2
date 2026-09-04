@@ -33,7 +33,30 @@ function httpError(status: number, message: string) {
   return err;
 }
 
+/** Lazy status rollover (replaces the old cron): runs on every module read,
+ *  portable across SQLite/MySQL (JS dates, no DB date functions). Never regresses. */
+export async function refreshModuleStatuses(now = new Date()) {
+  await prisma.module.updateMany({
+    where: { status: "Locked", startAt: { lte: now } },
+    data: { status: "InProgress" },
+  });
+  await prisma.module.updateMany({
+    where: { status: "InProgress", endAt: { lte: now } },
+    data: { status: "Finished" },
+  });
+}
+
+export async function getEditions() {
+  const rows = await prisma.module.findMany({
+    select: { editionLabel: true },
+    distinct: ["editionLabel"],
+    orderBy: { editionLabel: "desc" },
+  });
+  return rows.map((r) => r.editionLabel);
+}
+
 export async function listModules(edition?: string) {
+  await refreshModuleStatuses();
   const modules = await prisma.module.findMany({
     where: edition ? { editionLabel: edition } : undefined,
     include: { _count: { select: { quizzes: true } } },
@@ -54,6 +77,7 @@ export async function listModules(edition?: string) {
 }
 
 export async function getModuleDetail(moduleId: number, userId: number) {
+  await refreshModuleStatuses();
   const mod = await prisma.module.findUnique({
     where: { id: moduleId },
     include: {

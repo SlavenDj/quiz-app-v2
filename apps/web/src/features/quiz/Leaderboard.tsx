@@ -10,6 +10,11 @@ export function Leaderboard() {
       <ol>
         {data.map((r: any) => (
           <li key={r.userId}>
+            {r.avatarFile ? (
+              <img src={`${import.meta.env.VITE_API_URL}/uploads/${r.avatarFile}`} width={32} alt="" />
+            ) : (
+              <span>?</span>
+            )}{" "}
             #{r.rank} {r.firstName} {r.lastName} — {r.totalScore} bodova ({r.quizzesPlayed} kviza)
           </li>
         ))}

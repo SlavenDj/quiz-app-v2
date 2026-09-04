@@ -12,6 +12,13 @@ quizRoutes.use(requireAuth);
 const idParam = z.object({ id: z.coerce.number().int().positive() });
 
 quizRoutes.get(
+  "/editions",
+  asyncHandler(async (_req, res) => {
+    res.json(await quiz.getEditions());
+  })
+);
+
+quizRoutes.get(
   "/modules",
   asyncHandler(async (req, res) => {
     res.json(await quiz.listModules(req.query.edition as string | undefined));

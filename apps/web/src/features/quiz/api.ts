@@ -33,8 +33,15 @@ export interface SubmitResult {
   passed: boolean;
 }
 
-export function useModules() {
-  return useQuery({ queryKey: ["modules"], queryFn: () => api("/api/modules") });
+export function useEditions() {
+  return useQuery({ queryKey: ["editions"], queryFn: () => api("/api/editions") as Promise<string[]> });
+}
+
+export function useModules(edition?: string) {
+  return useQuery({
+    queryKey: ["modules", edition ?? "all"],
+    queryFn: () => api(edition ? `/api/modules?edition=${encodeURIComponent(edition)}` : "/api/modules"),
+  });
 }
 
 export function useModule(id: number) {

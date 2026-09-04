@@ -19,6 +19,8 @@ function imageUrl(file: string | null) {
 // ---------- Modules ----------
 
 export async function listModulesAdmin() {
+  const { refreshModuleStatuses } = await import("./quiz.service.js");
+  await refreshModuleStatuses();
   const modules = await prisma.module.findMany({
     include: { _count: { select: { quizzes: true } } },
     orderBy: { moduleNumber: "asc" },
