@@ -22,20 +22,14 @@ type FormValues = z.infer<typeof schema>;
 
 export function ChangePassword() {
   const [message, setMessage] = useState<string | null>(null);
+  const [showPasswords, setShowPasswords] = useState(false);
   const mutation = useChangePassword();
   const {
     register,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
-  const live = watch();
-  // TextInput doesn't forward refs (React 18), so strip RHF's ref and drive
-  // the displayed value from the form state instead.
-  const { ref: _refCurrent, ...currentReg } = register("currentPassword");
-  const { ref: _refNew, ...newReg } = register("newPassword");
-  const { ref: _refConfirm, ...confirmReg } = register("confirm");
 
   async function onSubmit(values: FormValues) {
     setMessage(null);
@@ -59,30 +53,34 @@ export function ChangePassword() {
         <TextInput
           id="currentPassword"
           label="Trenutna lozinka"
-          type="password"
+          type={showPasswords ? "text" : "password"}
           autoComplete="current-password"
           error={errors.currentPassword?.message}
-          {...currentReg}
-          value={live.currentPassword ?? ""}
+          {...register("currentPassword")}
         />
         <TextInput
           id="newPassword"
           label="Nova lozinka"
-          type="password"
+          type={showPasswords ? "text" : "password"}
           autoComplete="new-password"
           error={errors.newPassword?.message}
-          {...newReg}
-          value={live.newPassword ?? ""}
+          {...register("newPassword")}
         />
         <TextInput
           id="confirm"
           label="Potvrda lozinke"
-          type="password"
+          type={showPasswords ? "text" : "password"}
           autoComplete="new-password"
           error={errors.confirm?.message}
-          {...confirmReg}
-          value={live.confirm ?? ""}
+          {...register("confirm")}
         />
+        <button
+          type="button"
+          onClick={() => setShowPasswords((s) => !s)}
+          className="self-start text-sm font-medium text-brand-quiz hover:underline"
+        >
+          {showPasswords ? "Sakrij lozinke" : "Prikaži lozinke"}
+        </button>
         <Button
           type="submit"
           variant="primary"

@@ -104,6 +104,14 @@ export function useQuizPlay(quizId: number) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [left, play]);
 
+  // Warn before accidental tab close/refresh mid-quiz (progress restores on return).
+  useEffect(() => {
+    if (!play) return;
+    const guard = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", guard);
+    return () => window.removeEventListener("beforeunload", guard);
+  }, [play]);
+
   const setAnswer = (questionId: number, v: { answerIds: number[]; text: string }) =>
     setAnswers((s) => ({ ...s, [questionId]: v }));
 

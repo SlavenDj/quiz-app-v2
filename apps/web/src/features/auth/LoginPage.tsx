@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
@@ -15,6 +16,7 @@ export function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm<z.input<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   if (user) {
     return <Navigate to={user.role === "admin" ? "/admin/modules" : "/home"} replace />;
@@ -42,12 +44,19 @@ export function LoginPage() {
         <TextInput
           id="password"
           label="Lozinka"
-          type="password"
+          type={showPassword ? "text" : "password"}
           placeholder="Lozinka"
           className="w-full"
           error={errors.password?.message}
           {...register("password")}
         />
+        <button
+          type="button"
+          onClick={() => setShowPassword((s) => !s)}
+          className="self-start text-sm font-medium text-brand-quiz hover:underline"
+        >
+          {showPassword ? "Sakrij lozinku" : "Prikaži lozinku"}
+        </button>
         {login.isError && (
           <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
             {(login.error as Error).message}

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/auth";
 import { useLogout } from "../features/auth/hooks";
 
@@ -18,6 +18,9 @@ export default function Navbar() {
     });
   };
 
+  const linkClass = ({ isActive }: { isActive: boolean }) =>
+    isActive ? "font-bold underline underline-offset-4" : "hover:underline";
+
   return (
     <nav className="bg-[#AD45D1] text-white shadow">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
@@ -27,28 +30,28 @@ export default function Navbar() {
         <div className="flex items-center gap-4 text-sm">
           {!user ? (
             <>
-              <Link to="/login" className="hover:underline">
+              <NavLink to="/login" className={linkClass}>
                 Prijava
-              </Link>
-              <Link to="/register" className="hover:underline">
+              </NavLink>
+              <NavLink to="/register" className={linkClass}>
                 Registracija
-              </Link>
+              </NavLink>
             </>
           ) : (
             <>
-              <Link to="/home" className="hover:underline">
+              <NavLink to="/home" className={linkClass}>
                 Pocetna
-              </Link>
-              <Link to="/leaderboard" className="hover:underline">
+              </NavLink>
+              <NavLink to="/leaderboard" className={linkClass}>
                 Rang lista
-              </Link>
-              <Link to="/profile" className="hover:underline">
+              </NavLink>
+              <NavLink to="/profile" className={linkClass}>
                 Moj profil
-              </Link>
+              </NavLink>
               {user.role === "admin" && (
-                <Link to="/admin/modules" className="hover:underline">
+                <NavLink to="/admin/modules" className={linkClass}>
                   Admin
-                </Link>
+                </NavLink>
               )}
               <button
                 type="button"

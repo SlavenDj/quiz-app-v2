@@ -25,6 +25,11 @@ export function ModuleDetail() {
         <p className="mt-3 text-sm text-gray-500">Broj kvizova: {data.quizzes.length}</p>
       </Card>
       <div className="flex flex-col gap-4">
+        {data.status !== "InProgress" && (
+          <p className="rounded-card border border-brand-muted/40 bg-white px-3 py-2 text-sm text-gray-500 shadow-card">
+            {data.status === "Locked" ? "Modul je zaključan — kvizovi će biti dostupni uskoro." : "Modul je završen."}
+          </p>
+        )}
         {data.quizzes.map((q: any) => (
           <Card key={q.quizId} className="flex min-w-0 flex-col gap-2 rounded-card shadow-card">
             <h3 className="break-words text-lg font-semibold text-gray-900">{q.quizName}</h3>
@@ -40,7 +45,7 @@ export function ModuleDetail() {
               </Badge>
             </div>
             <div className="pt-1">
-              {q.canAttempt ? (
+              {q.canAttempt && data.status === "InProgress" ? (
                 <Link
                   to={`/quiz/${q.quizId}`}
                   className="inline-flex min-h-[44px] items-center justify-center rounded bg-brand-nav px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-quiz"
@@ -49,7 +54,7 @@ export function ModuleDetail() {
                 </Link>
               ) : (
                 <span className="inline-flex min-h-[44px] items-center rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500">
-                  Nema vise pokusaja
+                  {q.canAttempt ? "Modul nije aktivan" : "Nema vise pokusaja"}
                 </span>
               )}
             </div>

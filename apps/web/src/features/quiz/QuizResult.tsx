@@ -26,7 +26,7 @@ export function QuizResult() {
         <h1 className="mt-2 break-words text-2xl font-bold text-gray-900">
           {data.quizName}: {data.score}/{data.maxScore}
         </h1>
-        <p className="mt-1 text-sm text-gray-500">Vrijeme: {data.durationSec}s</p>
+        <p className="mt-1 text-sm text-gray-500">Vrijeme: {Math.floor((data.durationSec ?? 0) / 60)}:{String((data.durationSec ?? 0) % 60).padStart(2, "0")}</p>
       </Card>
       <div className="mx-auto mt-4 flex w-full max-w-2xl flex-col gap-4">
         {data.review.map((r: any, i: number) => {

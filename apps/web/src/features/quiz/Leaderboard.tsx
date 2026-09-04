@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useLeaderboard } from "./api";
 import { useAuthStore } from "../../stores/auth";
 import { Card } from "../../components/ui/Card";
@@ -26,8 +27,12 @@ export function Leaderboard() {
         {top3.map((r: any, i: number) => {
           const isMe = r.userId === currentUserId;
           return (
-            <Card
+            <Link
               key={r.userId}
+              to={`/userinfo/${r.userId}`}
+              className="min-w-0 rounded-card transition-shadow hover:shadow-card"
+            >
+            <Card
               className={`flex min-w-0 flex-col items-center gap-2 rounded-card text-center shadow-card ${
                 isMe ? "border-brand-nav ring-2 ring-brand-nav" : ""
               }`}
@@ -57,6 +62,7 @@ export function Leaderboard() {
                 {r.totalScore} bodova ({r.quizzesPlayed} kviza)
               </p>
             </Card>
+            </Link>
           );
         })}
       </div>
@@ -64,12 +70,13 @@ export function Leaderboard() {
         {rows.map((r: any) => {
           const isMe = r.userId === currentUserId;
           return (
-            <li
-              key={r.userId}
-              className={`flex min-w-0 items-center gap-3 rounded-card border bg-white px-3 py-2 shadow-card ${
-                isMe ? "border-brand-nav ring-2 ring-brand-nav" : "border-brand-muted/40"
-              }`}
-            >
+            <li key={r.userId} className="min-w-0">
+              <Link
+                to={`/userinfo/${r.userId}`}
+                className={`flex min-w-0 items-center gap-3 rounded-card border bg-white px-3 py-2 shadow-card transition-shadow hover:shadow-card ${
+                  isMe ? "border-brand-nav ring-2 ring-brand-nav" : "border-brand-muted/40"
+                }`}
+              >
               {r.avatarFile ? (
                 <img
                   src={`${API_URL}/uploads/${r.avatarFile}`}
@@ -89,6 +96,7 @@ export function Leaderboard() {
               <span className="shrink-0 text-sm text-gray-500">
                 {r.totalScore} bodova ({r.quizzesPlayed} kviza)
               </span>
+              </Link>
             </li>
           );
         })}
