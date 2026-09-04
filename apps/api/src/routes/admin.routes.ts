@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { z } from "zod";
 import multer from "multer";
-import path from "node:path";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth, requireRole } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
 import * as admin from "../services/admin.service.js";
+import { htmlString, emptyableHtmlString } from "validation";
 import { UPLOAD_DIR } from "../services/admin.service.js";
+import { cleanupUploadedFile, imageFileFilter, imageFilename } from "../lib/upload.js";
 
 export const adminRoutes = Router();
 adminRoutes.use(requireAuth, requireRole("admin"));
@@ -18,19 +19,20 @@ adminRoutes.get("/modules", asyncHandler(async (_req, res) => {
   res.json(await admin.listModulesAdmin());
 }));
 
+const datetime = z.string().refine((s) => !Number.isNaN(Date.parse(s)), "Neispravan datum.");
+const moduleBody = {
+  name: z.string().min(3).max(120),
+  shortDesc: z.string().min(1),
+  longDesc: z.string().min(1),
+  editionLabel: z.string().min(1),
+  moduleNumber: z.number().int().min(1),
+  startAt: datetime,
+  endAt: datetime,
+};
+
 adminRoutes.post(
   "/modules",
-  validate(
-    z.object({
-      name: z.string().min(3).max(120),
-      shortDesc: z.string().min(1),
-      longDesc: z.string().min(1),
-      editionLabel: z.string().min(1),
-      moduleNumber: z.number().int(),
-      startAt: z.string(),
-      endAt: z.string(),
-    })
-  ),
+  validate(z.object(moduleBody)),
   asyncHandler(async (req, res) => {
     res.status(201).json(await admin.createModule(req.body));
   })
@@ -45,9 +47,9 @@ adminRoutes.put(
       shortDesc: z.string().optional(),
       longDesc: z.string().optional(),
       editionLabel: z.string().optional(),
-      moduleNumber: z.number().int().optional(),
-      startAt: z.string().optional(),
-      endAt: z.string().optional(),
+      moduleNumber: z.number().int().min(1).optional(),
+      startAt: datetime.optional(),
+      endAt: datetime.optional(),
       status: z.string().optional(),
     })
   ),
@@ -80,7 +82,7 @@ adminRoutes.post(
     z.object({
       name: z.string().min(3).max(120),
       description: z.string().max(2000).default(""),
-      introHtml: z.string().default(""),
+      introHtml: emptyableHtmlString(20000).default(""),
       timeLimitSec: z.number().min(60).max(3600).default(600),
       maxAttempts: z.number().min(1).max(10).default(3),
       passPct: z.number().min(0).max(100).default(50),
@@ -98,7 +100,7 @@ adminRoutes.put(
     z.object({
       name: z.string().min(3).max(120).optional(),
       description: z.string().max(2000).optional(),
-      introHtml: z.string().optional(),
+      introHtml: emptyableHtmlString(20000).optional(),
       timeLimitSec: z.number().min(60).max(3600).optional(),
       maxAttempts: z.number().min(1).max(10).optional(),
       passPct: z.number().min(0).max(100).optional(),
@@ -123,7 +125,7 @@ adminRoutes.post(
   validate(idParam(), "params"),
   validate(
     z.object({
-      bodyHtml: z.string().min(1),
+      bodyHtml: htmlString(20000),
       type: z.enum(["single", "multiple", "text"]),
       expectedText: z.string().max(500).optional(),
     })
@@ -138,7 +140,7 @@ adminRoutes.put(
   validate(idParam(), "params"),
   validate(
     z.object({
-      bodyHtml: z.string().min(1).optional(),
+      bodyHtml: htmlString(20000).optional(),
       type: z.enum(["single", "multiple", "text"]).optional(),
       expectedText: z.string().max(500).nullable().optional(),
     })
@@ -187,14 +189,10 @@ adminRoutes.delete(
 const upload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-    filename: (_req, file, cb) =>
-      cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`),
+    filename: imageFilename,
   }),
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) cb(null, true);
-    else cb(new Error("Dozvoljeni su samo JPEG/PNG/WebP."));
-  },
+  fileFilter: imageFileFilter,
 });
 
 adminRoutes.post(
@@ -202,8 +200,13 @@ adminRoutes.post(
   validate(idParam(), "params"),
   upload.single("image"),
   asyncHandler(async (req, res) => {
-    if (!req.file) return res.status(400).json({ message: "Nema slike." });
-    res.json(await admin.setQuestionImage(Number(req.params.id), req.file.filename));
+    try {
+      if (!req.file) return res.status(400).json({ message: "Nema slike." });
+      res.json(await admin.setQuestionImage(Number(req.params.id), req.file.filename));
+    } catch (e) {
+      cleanupUploadedFile(req);
+      throw e;
+    }
   })
 );
 

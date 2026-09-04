@@ -20,6 +20,7 @@ quizRoutes.get(
 
 quizRoutes.get(
   "/modules",
+  validate(z.object({ edition: z.string().min(1).max(20).optional() }), "query"),
   asyncHandler(async (req, res) => {
     res.json(await quiz.listModules(req.query.edition as string | undefined));
   })
@@ -54,14 +55,15 @@ quizRoutes.post(
   "/quizzes/:id/play",
   validate(idParam, "params"),
   asyncHandler(async (req: AuthRequest, res) => {
-    res.status(201).json(await quiz.startOrResumePlay(Number(req.params.id), req.user!.id));
+    const result = await quiz.startOrResumePlay(Number(req.params.id), req.user!.id);
+    res.status(result.resumed ? 200 : 201).json(result);
   })
 );
 
 quizRoutes.post(
   "/quizzes/:id/submit",
   validate(idParam, "params"),
-  validate(submitSchema.extend({ attemptId: z.number() })),
+  validate(submitSchema),
   asyncHandler(async (req: AuthRequest, res) => {
     res.json(
       await quiz.submitAttempt(Number(req.params.id), req.user!.id, req.body.attemptId, req.body.answers)
@@ -80,7 +82,8 @@ quizRoutes.get(
 quizRoutes.get(
   "/leaderboard",
   asyncHandler(async (req, res) => {
-    const limit = Math.min(Number(req.query.limit ?? 50), 200);
-    res.json(await quiz.getLeaderboard(Number.isFinite(limit) ? limit : 50));
+    const raw = Number(req.query.limit ?? 50);
+    const limit = Math.min(Math.max(Number.isFinite(raw) ? raw : 50, 1), 200);
+    res.json(await quiz.getLeaderboard(limit));
   })
 );

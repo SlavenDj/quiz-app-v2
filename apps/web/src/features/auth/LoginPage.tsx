@@ -2,21 +2,28 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { loginSchema } from "validation";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { useLogin } from "./hooks";
+import { useAuthStore } from "../../stores/auth";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const login = useLogin();
+  const user = useAuthStore((s) => s.user);
   const { register, handleSubmit, formState: { errors } } = useForm<z.input<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
   });
 
+  if (user) {
+    return <Navigate to={user.role === "admin" ? "/admin/modules" : "/home"} replace />;
+  }
+
   return (
     <form
       onSubmit={handleSubmit(async (data) => {
-        await login.mutateAsync(data);
-        navigate("/home");
+        const res = await login.mutateAsync(data);
+        const role = res?.user?.role;
+        navigate(role === "admin" ? "/admin/modules" : "/home");
       })}
     >
       <h1>Prijava</h1>

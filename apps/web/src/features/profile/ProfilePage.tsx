@@ -29,7 +29,7 @@ const FIELDS: (keyof FormValues)[] = [
 ];
 
 export function ProfilePage() {
-  const { data: user, isLoading } = useMe();
+  const { data: user, isLoading, isError, error } = useMe();
   const mutation = useUpdateMe();
   const [message, setMessage] = useState<string | null>(null);
   const { register, handleSubmit, reset } = useForm<FormValues>({
@@ -62,6 +62,7 @@ export function ProfilePage() {
   }
 
   if (isLoading) return <p>Učitavanje...</p>;
+  if (isError) return <p>Greška: {(error as Error)?.message ?? "Neuspješno učitavanje profila."}</p>;
 
   return (
     <main>

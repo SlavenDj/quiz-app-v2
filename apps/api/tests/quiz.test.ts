@@ -146,10 +146,16 @@ describe("quiz", () => {
     assertNoIsCorrectKey(res.body);
   });
 
+  it("second play resumes the open attempt with 200", async () => {
+    const first = await studentAgent!.post(`/api/quizzes/${quizId}/play`);
+    const second = await studentAgent!.post(`/api/quizzes/${quizId}/play`);
+    expect(second.status).toBe(200);
+    expect(second.body.attemptId).toBe(first.body.attemptId);
+  });
   it("submit all-correct scores maxScore", async () => {
-    // Fresh play returns the open attempt (same attemptId); submit it all-correct
+    // Fresh play returns the open attempt (same attemptId) with status 200 (resume)
     const play = await studentAgent!.post(`/api/quizzes/${quizId}/play`);
-    expect(play.status).toBe(201);
+    expect([200, 201]).toContain(play.status);
     const attemptId = play.body.attemptId as number;
 
     const submit = await studentAgent!.post(`/api/quizzes/${quizId}/submit`).send({
@@ -167,7 +173,7 @@ describe("quiz", () => {
 
   it("partial multiple scores false, double-submit is 400", async () => {
     const play = await studentAgent!.post(`/api/quizzes/${quizId}/play`);
-    expect(play.status).toBe(201);
+    expect([200, 201]).toContain(play.status);
     const attemptId = play.body.attemptId as number;
 
     const submit = await studentAgent!.post(`/api/quizzes/${quizId}/submit`).send({

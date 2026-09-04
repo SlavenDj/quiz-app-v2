@@ -1,22 +1,35 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { registerSchema } from "validation";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { useRegister } from "./hooks";
+import { useAuthStore } from "../../stores/auth";
 
 export function RegisterPage() {
   const navigate = useNavigate();
   const reg = useRegister();
+  const user = useAuthStore((s) => s.user);
+  const [localError, setLocalError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors } } = useForm<z.input<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
   });
 
+  if (user) {
+    return <Navigate to={user.role === "admin" ? "/admin/modules" : "/home"} replace />;
+  }
+
   return (
     <form
       onSubmit={handleSubmit(async (data) => {
+        setLocalError(null);
         const res = await reg.mutateAsync(data);
-        navigate(`/verify/${res.userId}`);
+        if (Number.isFinite(res?.userId)) {
+          navigate(`/verify/${res.userId}`);
+        } else {
+          setLocalError("Registracija nije uspjela. Pokušajte ponovo.");
+        }
       })}
     >
       <h1>Registracija</h1>
@@ -33,6 +46,7 @@ export function RegisterPage() {
       <input placeholder="Grad" {...register("city")} />
       {errors.city && <p>{errors.city.message}</p>}
       {reg.isError && <p>{(reg.error as Error).message}</p>}
+      {localError && <p>{localError}</p>}
       <button disabled={reg.isPending}>{reg.isPending ? "..." : "Registruj se"}</button>
       <Link to="/login">Vec imas nalog?</Link>
     </form>

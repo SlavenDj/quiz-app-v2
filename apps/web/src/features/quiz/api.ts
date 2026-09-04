@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 
 export interface PlayAnswer {
@@ -31,6 +31,7 @@ export interface SubmitResult {
   maxScore: number;
   durationSec: number;
   passed: boolean;
+  expired?: boolean;
 }
 
 export function useEditions() {
@@ -59,9 +60,18 @@ export function useStartPlay() {
 }
 
 export function useSubmitQuiz(quizId: number) {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: { attemptId: number; answers: { questionId: number; answerIds?: number[]; text?: string }[] }) =>
       api(`/api/quizzes/${quizId}/submit`, { method: "POST", body: JSON.stringify(body) }) as Promise<SubmitResult>,
+    onSuccess: () => {
+      qc.invalidateQueries({
+        predicate: (q) => {
+          const k0 = q.queryKey[0];
+          return k0 === "quiz" || k0 === "module" || k0 === "modules" || k0 === "attempt" || k0 === "leaderboard";
+        },
+      });
+    },
   });
 }
 

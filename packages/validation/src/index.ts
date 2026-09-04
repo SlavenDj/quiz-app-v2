@@ -15,19 +15,35 @@ export const loginSchema = z.object({
 });
 
 export const verifySchema = z.object({
-  userId: z.number(),
+  userId: z.number().int().positive(),
   code: z.string().length(6),
 });
 
+export const resetSchema = z.object({
+  email: z.string().email(),
+  code: z.string().length(6),
+  newPassword: z.string().min(8).max(72),
+});
+
 export const submitSchema = z.object({
+  attemptId: z.number().int().positive(),
   answers: z.array(
     z.object({
-      questionId: z.number(),
-      answerIds: z.array(z.number()).optional(),
+      questionId: z.number().int().positive(),
+      answerIds: z.array(z.number().int().positive()).optional(),
       text: z.string().max(2000).optional(),
     })
   ),
 });
+
+const noScript = (s: string) => !/<script/i.test(s);
+
+export const htmlString = (max: number) =>
+  z.string().min(1).max(max).refine(noScript, "HTML ne smije sadrzavati script tag.");
+
+/** For optional HTML fields where "" is a legal value (min must not reject the default). */
+export const emptyableHtmlString = (max: number) =>
+  z.string().max(max).refine(noScript, "HTML ne smije sadrzavati script tag.");
 
 export const quizUpsertSchema = z.object({
   name: z.string().min(3).max(120),

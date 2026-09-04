@@ -3,7 +3,7 @@ import { useAuthStore } from "../../stores/auth";
 
 export function LandingPage() {
   const user = useAuthStore((s) => s.user);
-  if (user) return <Navigate to="/home" replace />;
+  if (user) return <Navigate to={user.role === "admin" ? "/admin/modules" : "/home"} replace />;
 
   return (
     <main>

@@ -67,12 +67,21 @@ export async function updateModule(
 }
 
 export async function deleteModule(id: number) {
-  const mod = await prisma.module.findUnique({ where: { id } });
+  const mod = await prisma.module.findUnique({
+    where: { id },
+    include: { quizzes: { select: { quizId: true } } },
+  });
   if (!mod) throw httpError(404, "Modul nije pronadjen.");
-  await prisma.$transaction([
-    prisma.quizModule.deleteMany({ where: { moduleId: id } }),
-    prisma.module.delete({ where: { id } }),
-  ]);
+  // Fully remove quizzes that live ONLY in this module; merely unlink shared ones.
+  for (const { quizId } of mod.quizzes) {
+    const links = await prisma.quizModule.count({ where: { quizId } });
+    if (links <= 1) {
+      await deleteQuizCascade(quizId);
+    } else {
+      await prisma.quizModule.deleteMany({ where: { quizId, moduleId: id } });
+    }
+  }
+  await prisma.module.delete({ where: { id } });
   return { ok: true };
 }
 
@@ -135,24 +144,40 @@ export async function updateQuiz(
   return prisma.quiz.update({ where: { id: quizId }, data });
 }
 
+/** Full removal of a quiz: attempts, links, orphan questions (+answers+images).
+ *  Questions shared with other quizzes keep their answers — only the link is cut. */
+async function deleteQuizCascade(quizId: number) {
+  const links = await prisma.quizQuestion.findMany({ where: { quizId }, select: { questionId: true } });
+  const questionIds = links.map((l) => l.questionId);
+  const shared = new Set(
+    (
+      await prisma.quizQuestion.findMany({
+        where: { questionId: { in: questionIds }, quizId: { not: quizId } },
+        select: { questionId: true },
+      })
+    ).map((l) => l.questionId)
+  );
+  const orphanIds = questionIds.filter((id) => !shared.has(id));
+  const orphans = await prisma.question.findMany({ where: { id: { in: orphanIds } }, select: { imageFile: true } });
+  for (const o of orphans) {
+    if (o.imageFile) {
+      try {
+        fs.unlinkSync(path.join(UPLOAD_DIR, o.imageFile));
+      } catch {}
+    }
+  }
+  await prisma.attempt.deleteMany({ where: { quizId } });
+  await prisma.quizQuestion.deleteMany({ where: { quizId } });
+  await prisma.quizModule.deleteMany({ where: { quizId } });
+  await prisma.answer.deleteMany({ where: { questionId: { in: orphanIds } } });
+  await prisma.question.deleteMany({ where: { id: { in: orphanIds } } });
+  await prisma.quiz.delete({ where: { id: quizId } });
+}
+
 export async function deleteQuiz(quizId: number) {
-  const quiz = await prisma.quiz.findUnique({
-    where: { id: quizId },
-    include: { questions: { include: { question: true } } },
-  });
+  const quiz = await prisma.quiz.findUnique({ where: { id: quizId } });
   if (!quiz) throw httpError(404, "Kviz nije pronadjen.");
-  const questionIds = quiz.questions.map((q) => q.questionId);
-  await prisma.$transaction([
-    prisma.attempt.deleteMany({ where: { quizId } }),
-    prisma.quizQuestion.deleteMany({ where: { quizId } }),
-    prisma.quizModule.deleteMany({ where: { quizId } }),
-    prisma.quiz.delete({ where: { id: quizId } }),
-    // delete orphan questions (not linked to any other quiz) + their answers
-    prisma.answer.deleteMany({ where: { questionId: { in: questionIds } } }),
-    prisma.question.deleteMany({
-      where: { id: { in: questionIds }, quizzes: { none: {} } },
-    }),
-  ]);
+  await deleteQuizCascade(quizId);
   return { ok: true };
 }
 

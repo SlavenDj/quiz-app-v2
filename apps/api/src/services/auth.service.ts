@@ -8,7 +8,7 @@ const CODE_TTL_MS = 15 * 60 * 1000;
 const ALLOWED_DOMAINS = (process.env.ALLOWED_EMAIL_DOMAINS ?? "gmail.com,outlook.com,hotmail.com,yahoo.com,plusultra.ba").split(",");
 
 function sixDigit() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(crypto.randomInt(100000, 1000000));
 }
 
 function hashCode(code: string) {
@@ -49,7 +49,13 @@ export async function register(input: {
   }
   const passwordHash = await bcrypt.hash(input.password, 12);
   const code = sixDigit();
-  const role = domain === "plusultra.ba" ? "admin" : "student";
+  // Bootstrap rule: plusultra.ba domain becomes admin ONLY if no admin exists yet.
+  // Otherwise everyone registers as student (no self-granted privilege).
+  let role = "student";
+  if (domain === "plusultra.ba") {
+    const adminCount = await prisma.user.count({ where: { role: "admin" } });
+    if (adminCount === 0) role = "admin";
+  }
   const user = await prisma.user.create({
     data: {
       email: input.email,
@@ -64,7 +70,15 @@ export async function register(input: {
       verificationExpires: new Date(Date.now() + CODE_TTL_MS),
     },
   });
-  await sendCodeEmail(input.email, code, "verify");
+  try {
+    await sendCodeEmail(input.email, code, "verify");
+  } catch {
+    // Don't leave a stuck unverifiable account if mail fails.
+    await prisma.user.delete({ where: { id: user.id } });
+    const err: any = new Error("Registracija nije uspjela (email). Pokusajte ponovo.");
+    err.status = 500;
+    throw err;
+  }
   return { userId: user.id };
 }
 
@@ -123,18 +137,26 @@ export async function refresh(refreshToken: string) {
 
 export async function forgotPassword(email: string) {
   const user = await prisma.user.findUnique({ where: { emailNormalized: email.toLowerCase() } });
-  if (!user) return { ok: true }; // ne otkrivaj da li email postoji
+  // Always return the same shape — never reveal whether the email exists.
+  if (!user) return { ok: true };
   const code = sixDigit();
   await prisma.user.update({
     where: { id: user.id },
     data: { resetHash: hashCode(code), resetExpires: new Date(Date.now() + CODE_TTL_MS) },
   });
-  await sendCodeEmail(user.email, code, "reset");
-  return { ok: true, userId: user.id };
+  try {
+    await sendCodeEmail(user.email, code, "reset");
+  } catch {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { resetHash: null, resetExpires: null },
+    });
+  }
+  return { ok: true };
 }
 
-export async function resetPassword(userId: number, code: string, newPassword: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+export async function resetPassword(email: string, code: string, newPassword: string) {
+  const user = await prisma.user.findUnique({ where: { emailNormalized: email.toLowerCase() } });
   if (!user || !user.resetHash || !user.resetExpires) {
     const err: any = new Error("Neispravan kod.");
     err.status = 400;
@@ -146,7 +168,7 @@ export async function resetPassword(userId: number, code: string, newPassword: s
     throw err;
   }
   await prisma.user.update({
-    where: { id: userId },
+    where: { id: user.id },
     data: {
       passwordHash: await bcrypt.hash(newPassword, 12),
       resetHash: null,

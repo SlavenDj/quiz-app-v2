@@ -6,7 +6,7 @@ export async function api(path: string, init: RequestInit = {}) {
     headers: { "Content-Type": "application/json", ...(init.headers ?? {}) },
     ...init,
   });
-  if (res.status === 401) {
+  if (res.status === 401 && !path.startsWith("/api/auth/")) {
     await fetch(`${API_URL}/api/auth/refresh`, { method: "POST", credentials: "include" }).catch(() => {});
     const retry = await fetch(`${API_URL}${path}`, {
       credentials: "include",

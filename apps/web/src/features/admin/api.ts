@@ -9,7 +9,11 @@ export function useCreateModule() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: any) => api("/api/admin/modules", { method: "POST", body: JSON.stringify(body) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "modules"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "modules"] });
+      qc.invalidateQueries({ predicate: (query) => query.queryKey[0] === "modules" });
+      qc.invalidateQueries({ queryKey: ["editions"] });
+    },
   });
 }
 
@@ -17,7 +21,11 @@ export function useDeleteModule() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => api(`/api/admin/modules/${id}`, { method: "DELETE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "modules"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "modules"] });
+      qc.invalidateQueries({ predicate: (query) => query.queryKey[0] === "modules" });
+      qc.invalidateQueries({ queryKey: ["editions"] });
+    },
   });
 }
 
@@ -32,7 +40,8 @@ export function useCreateQuiz(moduleId: number) {
       api(`/api/admin/modules/${moduleId}/quizzes`, { method: "POST", body: JSON.stringify(body) }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "modules"] });
-      qc.invalidateQueries({ queryKey: ["module"] });
+      qc.invalidateQueries({ predicate: (query) => query.queryKey[0] === "modules" });
+      qc.invalidateQueries({ queryKey: ["editions"] });
     },
   });
 }
@@ -41,7 +50,10 @@ export function useUpdateQuiz(quizId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: any) => api(`/api/admin/quizzes/${quizId}`, { method: "PUT", body: JSON.stringify(body) }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "quiz", quizId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "quiz", quizId] });
+      qc.invalidateQueries({ queryKey: ["quiz", quizId] });
+    },
   });
 }
 
@@ -51,7 +63,8 @@ export function useDeleteQuiz() {
     mutationFn: (id: number) => api(`/api/admin/quizzes/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "modules"] });
-      qc.invalidateQueries({ queryKey: ["module"] });
+      qc.invalidateQueries({ predicate: (query) => query.queryKey[0] === "modules" });
+      qc.invalidateQueries({ queryKey: ["editions"] });
     },
   });
 }

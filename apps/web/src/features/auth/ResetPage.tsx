@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { api } from "../../lib/api";
 
 const schema = z
   .object({
+    email: z.string().email("Neispravan email"),
     code: z.string().length(6, "Kod mora imati 6 karaktera"),
     newPassword: z.string().min(8, "Lozinka mora imati najmanje 8 karaktera"),
     confirm: z.string(),
@@ -18,11 +19,13 @@ const schema = z
 type Form = z.infer<typeof schema>;
 
 export function ResetPage() {
-  const { id } = useParams<{ id?: string }>();
+  const location = useLocation();
+  const stateEmail = (location.state as { email?: string } | null)?.email ?? "";
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Form>({
     resolver: zodResolver(schema),
+    defaultValues: { email: stateEmail },
   });
 
   return (
@@ -39,7 +42,7 @@ export function ResetPage() {
             try {
               await api("/api/auth/reset", {
                 method: "POST",
-                body: JSON.stringify({ userId: Number(id), code: data.code, newPassword: data.newPassword }),
+                body: JSON.stringify({ email: data.email, code: data.code, newPassword: data.newPassword }),
               });
               setDone(true);
             } catch (e) {
@@ -47,6 +50,9 @@ export function ResetPage() {
             }
           })}
         >
+          <label htmlFor="email">Email</label>
+          <input id="email" placeholder="Email" {...register("email")} />
+          {errors.email && <p>{errors.email.message}</p>}
           <label htmlFor="code">Kod</label>
           <input id="code" placeholder="6-cifreni kod" {...register("code")} />
           {errors.code && <p>{errors.code.message}</p>}

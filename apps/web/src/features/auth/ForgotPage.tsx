@@ -9,8 +9,8 @@ const schema = z.object({ email: z.string().email("Neispravan email") });
 type Form = z.infer<typeof schema>;
 
 export function ForgotPage() {
-  const [userId, setUserId] = useState<number | null>(null);
   const [sent, setSent] = useState(false);
+  const [sentEmail, setSentEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<Form>({
@@ -24,12 +24,13 @@ export function ForgotPage() {
         onSubmit={handleSubmit(async (data) => {
           setError(null);
           try {
-            const res = await api("/api/auth/forgot", {
+            await api("/api/auth/forgot", {
               method: "POST",
               body: JSON.stringify(data),
-            }) as { ok: boolean; userId?: number };
+            });
             setSent(true);
-            if (typeof res.userId === "number") setUserId(res.userId);
+            setSentEmail(data.email);
+            navigate("/reset", { state: { email: data.email } });
           } catch (e) {
             setError((e as Error).message);
           }
@@ -43,11 +44,8 @@ export function ForgotPage() {
       </form>
       {sent && (
         <section>
-          <p>Kod je poslan na vaš email (dev: provjerite API server log).</p>
-          <Link to="/reset">Idi na reset</Link>
-          {userId !== null && (
-            <button onClick={() => navigate(`/reset/${userId}`)}>Nastavi na reset</button>
-          )}
+          <p>Kod je poslan na vaš email.</p>
+          <Link to="/reset" state={{ email: sentEmail }}>Idi na reset</Link>
         </section>
       )}
     </main>

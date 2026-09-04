@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { validate } from "../middleware/validate.js";
-import { loginSchema, registerSchema, verifySchema } from "validation";
+import { loginSchema, registerSchema, resetSchema, verifySchema } from "validation";
 import { clearAuthCookies, setAuthCookies } from "../lib/cookies.js";
 import * as auth from "../services/auth.service.js";
 
@@ -39,9 +39,13 @@ authRoutes.post(
   asyncHandler(async (req, res) => {
     const token = req.cookies?.refreshToken as string | undefined;
     if (!token) return res.status(401).json({ message: "Unauthenticated" });
-    const result = await auth.refresh(token);
-    setAuthCookies(res, result.access, result.refresh);
-    res.json({ user: result.user });
+    try {
+      const result = await auth.refresh(token);
+      setAuthCookies(res, result.access, result.refresh);
+      res.json({ user: result.user });
+    } catch {
+      return res.status(401).json({ message: "Session expired" });
+    }
   })
 );
 
@@ -63,8 +67,8 @@ authRoutes.post(
 
 authRoutes.post(
   "/reset",
-  validate(z.object({ userId: z.number(), code: z.string().length(6), newPassword: z.string().min(8).max(72) })),
+  validate(resetSchema),
   asyncHandler(async (req, res) => {
-    res.json(await auth.resetPassword(req.body.userId, req.body.code, req.body.newPassword));
+    res.json(await auth.resetPassword(req.body.email, req.body.code, req.body.newPassword));
   })
 );

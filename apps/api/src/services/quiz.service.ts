@@ -165,29 +165,41 @@ export async function startOrResumePlay(quizId: number, userId: number) {
   if (!quiz) throw httpError(404, "Kviz nije pronadjen.");
   if (quiz.questions.length === 0) throw httpError(400, "Kviz nema pitanja.");
 
-  // Reuse open attempt if still within time
-  const open = await prisma.attempt.findFirst({
+  // Time-gating: quiz is playable only if at least one linked module is
+  // currently InProgress (or the quiz has no module links at all).
+  const linkedModuleIds = await prisma.quizModule.findMany({ where: { quizId }, select: { moduleId: true } });
+  if (linkedModuleIds.length > 0) {
+    const open = await prisma.module.count({
+      where: { id: { in: linkedModuleIds.map((m) => m.moduleId) }, status: "InProgress" },
+    });
+    if (open === 0) throw httpError(403, "Kviz trenutno nije dostupan.");
+  }
+
+  // Close any stale open attempts for this user+quiz first (keeps exactly
+  // one open attempt; orphans can never accumulate or bypass maxAttempts).
+  const opens = await prisma.attempt.findMany({
     where: { quizId, userId, submittedAt: null },
     orderBy: { attemptNo: "desc" },
   });
-  if (open) {
-    const elapsed = (Date.now() - open.startedAt.getTime()) / 1000;
-    if (elapsed <= quiz.timeLimitSec + GRACE_SEC) {
-      return playPayload(quiz, open.id, open.attemptNo, open.startedAt, JSON.parse(open.playOrder) as PlayEntry[]);
+  const completed = await prisma.attempt.count({ where: { quizId, userId, submittedAt: { not: null } } });
+  for (const o of opens) {
+    const elapsed = (Date.now() - o.startedAt.getTime()) / 1000;
+    if (elapsed > quiz.timeLimitSec + GRACE_SEC) {
+      await prisma.attempt.update({
+        where: { id: o.id },
+        data: { submittedAt: new Date(), score: 0, durationSec: quiz.timeLimitSec, answersJson: "[]" },
+      });
     }
-    // Expired → auto-close with 0 and fall through to new attempt
-    await prisma.attempt.update({
-      where: { id: open.id },
-      data: {
-        submittedAt: new Date(),
-        score: 0,
-        durationSec: quiz.timeLimitSec,
-        answersJson: "[]",
-      },
-    });
+  }
+  const live = await prisma.attempt.findFirst({
+    where: { quizId, userId, submittedAt: null },
+    orderBy: { attemptNo: "desc" },
+  });
+  if (live) {
+    if (completed >= quiz.maxAttempts) throw httpError(403, "Iskoristili ste sve pokusaje.");
+    return { ...playPayload(quiz, live.id, live.attemptNo, live.startedAt, JSON.parse(live.playOrder) as PlayEntry[]), resumed: true };
   }
 
-  const completed = await prisma.attempt.count({ where: { quizId, userId, submittedAt: { not: null } } });
   if (completed >= quiz.maxAttempts) throw httpError(403, "Iskoristili ste sve pokusaje.");
 
   const order: PlayEntry[] = shuffle(
@@ -196,16 +208,26 @@ export async function startOrResumePlay(quizId: number, userId: number) {
       answerIds: shuffle(question.answers.map((a) => a.id)),
     }))
   );
-  const attempt = await prisma.attempt.create({
-    data: {
-      userId,
-      quizId,
-      attemptNo: completed + 1,
-      maxScore: quiz.questions.length,
-      playOrder: JSON.stringify(order),
-    },
-  });
-  return playPayload(quiz, attempt.id, attempt.attemptNo, attempt.startedAt, order);
+  // Non-atomic count→create can collide on attemptNo under concurrent
+  // double-POST /play; retry on unique violation instead of 500.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const n = await prisma.attempt.count({ where: { quizId, userId, submittedAt: { not: null } } });
+    try {
+      const created = await prisma.attempt.create({
+        data: {
+          userId,
+          quizId,
+          attemptNo: n + 1,
+          maxScore: quiz.questions.length,
+          playOrder: JSON.stringify(order),
+        },
+      });
+      return { ...playPayload(quiz, created.id, created.attemptNo, created.startedAt, order), resumed: false };
+    } catch (e: any) {
+      if (e?.code !== "P2002" || attempt === 2) throw e;
+    }
+  }
+  throw httpError(500, "Neuspjesno pokretanje kviza.");
 }
 
 function playPayload(
@@ -221,9 +243,10 @@ function playPayload(
   order: PlayEntry[]
 ) {
   const byId = new Map(quiz.questions.map((q) => [q.question.id, q.question]));
+  // Includes the submit grace window so the display matches resume policy.
   const timeLeftSec = Math.max(
     0,
-    quiz.timeLimitSec - Math.floor((Date.now() - startedAt.getTime()) / 1000)
+    quiz.timeLimitSec + GRACE_SEC - Math.floor((Date.now() - startedAt.getTime()) / 1000)
   );
   return {
     attemptId,
@@ -265,6 +288,23 @@ export async function submitAttempt(
   });
   if (!quiz) throw httpError(404, "Kviz nije pronadjen.");
 
+  // Reject unknown questionIds instead of silently ignoring them.
+  const known = new Set(quiz.questions.map((q) => q.question.id));
+  for (const a of answers) {
+    if (!known.has(a.questionId)) throw httpError(400, "Nepoznato pitanje u odgovorima.");
+  }
+
+  // Late submit: auto-close with 0 (same as the /play expiry path).
+  const elapsedSec = (Date.now() - attempt.startedAt.getTime()) / 1000;
+  const submittedAt = new Date();
+  if (elapsedSec > quiz.timeLimitSec + GRACE_SEC) {
+    await prisma.attempt.update({
+      where: { id: attempt.id },
+      data: { submittedAt, score: 0, durationSec: quiz.timeLimitSec, answersJson: JSON.stringify(answers) },
+    });
+    return { attemptId: attempt.id, score: 0, maxScore: quiz.questions.length, durationSec: quiz.timeLimitSec, passed: false, expired: true, review: [] };
+  }
+
   const byQuestion = new Map(answers.map((a) => [a.questionId, a]));
   let score = 0;
   const review: { questionId: number; correct: boolean }[] = [];
@@ -279,7 +319,8 @@ export async function submitAttempt(
       } else if (question.type === "multiple") {
         const right = new Set(question.answers.filter((a) => a.isCorrect).map((a) => a.id));
         const picked = new Set(given.answerIds ?? []);
-        correct = right.size === picked.size && [...right].every((id) => picked.has(id));
+        // Non-empty exact set match (zero-correct + empty pick is NOT a point).
+        correct = picked.size > 0 && right.size === picked.size && [...right].every((id) => picked.has(id));
       } else if (question.type === "text") {
         correct =
           !!question.expectedText &&
@@ -290,7 +331,6 @@ export async function submitAttempt(
     review.push({ questionId: question.id, correct });
   }
 
-  const submittedAt = new Date();
   const durationSec = Math.floor((submittedAt.getTime() - attempt.startedAt.getTime()) / 1000);
   await prisma.attempt.update({
     where: { id: attempt.id },
@@ -316,15 +356,18 @@ export async function getAttemptReview(attemptId: number, userId: number) {
     },
   });
   if (!attempt || !attempt.submittedAt) throw httpError(404, "Rezultat nije pronadjen.");
-  if (attempt.userId !== userId && attempt.quiz && (await isNotAdmin(userId))) {
-    throw httpError(403, "Forbidden");
+  if (attempt.userId !== userId) {
+    const u = await prisma.user.findUnique({ where: { id: userId } });
+    if (u?.role !== "admin") throw httpError(403, "Forbidden");
   }
-  const given = new Map(
-    (JSON.parse(attempt.answersJson) as { questionId: number; answerIds?: number[]; text?: string }[]).map((a) => [
-      a.questionId,
-      a,
-    ])
-  );
+  let parsed: { questionId: number; answerIds?: number[]; text?: string }[];
+  try {
+    parsed = JSON.parse(attempt.answersJson);
+    if (!Array.isArray(parsed)) throw new Error("bad shape");
+  } catch {
+    throw httpError(500, "Osteceni podaci pokusaja.");
+  }
+  const given = new Map(parsed.map((a) => [a.questionId, a]));
   return {
     attemptId: attempt.id,
     quizId: attempt.quizId,
@@ -342,11 +385,6 @@ export async function getAttemptReview(attemptId: number, userId: number) {
       userText: given.get(question.id)?.text ?? null,
     })),
   };
-}
-
-async function isNotAdmin(userId: number) {
-  const u = await prisma.user.findUnique({ where: { id: userId } });
-  return u?.role !== "admin";
 }
 
 export async function getLeaderboard(limit = 50) {

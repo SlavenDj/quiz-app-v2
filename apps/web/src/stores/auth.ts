@@ -11,8 +11,16 @@ interface AuthState {
   setUser: (u: User | null) => void;
 }
 
+function loadUser(): User | null {
+  try {
+    return JSON.parse(localStorage.getItem("v2-user") ?? "null");
+  } catch {
+    return null;
+  }
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: JSON.parse(localStorage.getItem("v2-user") ?? "null"),
+  user: loadUser(),
   setUser: (user) => {
     if (user) localStorage.setItem("v2-user", JSON.stringify(user));
     else localStorage.removeItem("v2-user");

@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RequireAdmin, RequireAuth } from "./guards";
 import { RootLayout } from "./layout";
 import { LoginPage } from "../features/auth/LoginPage";
@@ -28,7 +28,7 @@ export const router = createBrowserRouter([
       { path: "/register", element: <RegisterPage /> },
       { path: "/verify/:id", element: <VerifyPage /> },
       { path: "/forgot", element: <ForgotPage /> },
-      { path: "/reset/:id", element: <ResetPage /> },
+      { path: "/reset", element: <ResetPage /> },
       {
         element: <RequireAuth />,
         children: [
@@ -45,6 +45,7 @@ export const router = createBrowserRouter([
         path: "/admin",
         element: <RequireAdmin />,
         children: [
+          { index: true, element: <Navigate to="/admin/modules" replace /> },
           { path: "modules", element: <AdminModules /> },
           { path: "modules/:id", element: <AdminQuizzes /> },
           { path: "quiz/:id/edit", element: <EditQuiz /> },

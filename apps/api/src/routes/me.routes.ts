@@ -8,6 +8,7 @@ import { asyncHandler } from "../middleware/asyncHandler.js";
 import { requireAuth, type AuthRequest } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
 import { prisma } from "../lib/prisma.js";
+import { cleanupUploadedFile, imageFileFilter, imageFilename } from "../lib/upload.js";
 import { toPublicUser } from "../services/auth.service.js";
 
 export const meRoutes = Router();
@@ -63,14 +64,10 @@ fs.mkdirSync(uploadDir, { recursive: true });
 const upload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, uploadDir),
-    filename: (_req, file, cb) =>
-      cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`),
+    filename: imageFilename,
   }),
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) cb(null, true);
-    else cb(new Error("Dozvoljeni su samo JPEG/PNG/WebP."));
-  },
+  fileFilter: imageFileFilter,
 });
 
 meRoutes.post(

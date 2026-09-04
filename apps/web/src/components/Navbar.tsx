@@ -4,12 +4,17 @@ import { useLogout } from "../features/auth/hooks";
 
 export default function Navbar() {
   const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
   const logout = useLogout();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout.mutate(undefined, {
-      onSettled: () => navigate("/login"),
+      onSuccess: () => navigate("/login"),
+      onError: () => {
+        setUser(null);
+        navigate("/login");
+      },
     });
   };
 
