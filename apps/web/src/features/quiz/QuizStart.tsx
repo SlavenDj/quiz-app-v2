@@ -19,21 +19,21 @@ export function QuizStart() {
   const scheduledFuture = !!data?.scheduledStartAt && countdown !== null;
 
   if (isLoading) return <Spinner label="Ucitavanje..." />;
-  if (error) return <p className="page-container text-status-danger">Greska: {(error as Error).message}</p>;
+  if (error) return <p className="page-container text-status-danger dark:text-red-400">Greska: {(error as Error).message}</p>;
 
   return (
     <div className="page-container">
       <Link
         to={data.moduleId ? `/modules/${data.moduleId}` : "/home"}
-        className="mb-4 inline-flex min-h-[44px] items-center font-medium text-brand-quiz hover:underline"
+        className="mb-4 inline-flex min-h-[44px] items-center font-medium text-brand-quiz dark:text-fuchsia-300 hover:underline"
       >
         ← Nazad
       </Link>
       <Card className="mx-auto w-full max-w-2xl rounded-card shadow-card">
-        <h1 className="break-words text-2xl font-bold text-gray-900">{data.name}</h1>
-        <p className="mt-2 min-w-0 break-words text-sm text-gray-600 sm:text-base">{data.description}</p>
+        <h1 className="break-words text-2xl font-bold text-gray-900 dark:text-zinc-100">{data.name}</h1>
+        <p className="mt-2 min-w-0 break-words text-sm text-gray-600 dark:text-zinc-400 sm:text-base">{data.description}</p>
         <div
-          className="mt-3 min-w-0 break-words text-sm text-gray-700 sm:text-base"
+          className="mt-3 min-w-0 break-words text-sm text-gray-700 dark:text-zinc-300 sm:text-base"
           dangerouslySetInnerHTML={{ __html: data.introHtml }}
         />
         <div className="mt-4 flex flex-wrap gap-2">
@@ -45,11 +45,11 @@ export function QuizStart() {
         </div>
         <div className="mt-5">
           {scheduledFuture && (
-            <p className="mb-2 rounded-card bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+            <p className="mb-2 rounded-card bg-amber-50 dark:bg-amber-950 px-4 py-3 text-sm font-medium text-amber-800 dark:text-amber-300">
               Počinje za {countdown}
             </p>
           )}
-          {earlyMsg && <p className="mb-2 rounded-card bg-red-50 px-4 py-3 text-sm text-status-danger">{earlyMsg}</p>}
+          {earlyMsg && <p className="mb-2 rounded-card bg-red-50 dark:bg-red-950 px-4 py-3 text-sm text-status-danger dark:text-red-400">{earlyMsg}</p>}
           {data.canAttempt ? (
             <Button
               variant="primary"
@@ -71,7 +71,7 @@ export function QuizStart() {
               {scheduledFuture ? `Počinje za ${countdown}` : "Zapocni kviz"}
             </Button>
           ) : (
-            <p className="rounded-card bg-gray-100 px-4 py-3 text-sm text-gray-600">Nema vise pokusaja.</p>
+            <p className="rounded-card bg-gray-100 dark:bg-zinc-800 px-4 py-3 text-sm text-gray-600 dark:text-zinc-400">Nema vise pokusaja.</p>
           )}
         </div>
       </Card>

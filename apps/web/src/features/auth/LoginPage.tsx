@@ -9,6 +9,7 @@ import { useAuthStore } from "../../stores/auth";
 import { isDemo } from "../../lib/demo";
 import { Button } from "../../components/ui/Button";
 import { TextInput } from "../../components/ui/TextInput";
+import { AuthLayout, AuthError } from "./AuthLayout";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -37,47 +38,61 @@ export function LoginPage() {
   }
 
   return (
-    <div className="auth-card">
-      <h1 className="text-2xl font-bold text-brand-quiz">Prijava</h1>
-      <form
-        className="mt-4 flex flex-col gap-4"
-        onSubmit={handleSubmit(submitLogin)}
-      >
+    <AuthLayout
+      title="Dobrodošao nazad"
+      subtitle="Prijavi se i nastavi skupljati bodove."
+      icon={
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" aria-hidden>
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+          <path d="M10 17l5-5-5-5M15 12H3" />
+        </svg>
+      }
+    >
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit(submitLogin)}>
         <TextInput
           id="email"
           label="Email"
-          placeholder="Email"
+          type="email"
+          autoComplete="email"
+          placeholder="npr. student@gmail.com"
           className="w-full"
           error={errors.email?.message}
           {...register("email")}
         />
-        <TextInput
-          id="password"
-          label="Lozinka"
-          type={showPassword ? "text" : "password"}
-          placeholder="Lozinka"
-          className="w-full"
-          error={errors.password?.message}
-          {...register("password")}
-        />
-        <button
-          type="button"
-          onClick={() => setShowPassword((s) => !s)}
-          className="self-start text-sm font-medium text-brand-quiz hover:underline"
-        >
-          {showPassword ? "Sakrij lozinku" : "Prikaži lozinku"}
-        </button>
-        {login.isError && (
-          <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
-            {(login.error as Error).message}
-          </p>
-        )}
-        <Button type="submit" disabled={login.isPending} className="w-full">
-          {login.isPending ? "..." : "Prijavi se"}
+        <div>
+          <div className="relative">
+            <TextInput
+              id="password"
+              label="Lozinka"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              placeholder="Tvoja lozinka"
+              className="w-full pr-16"
+              error={errors.password?.message}
+              {...register("password")}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              aria-pressed={showPassword}
+              className="absolute bottom-1.5 right-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-brand-quiz hover:bg-brand-muted/20 dark:text-fuchsia-300"
+            >
+              {showPassword ? "Sakrij" : "Prikaži"}
+            </button>
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <Link to="/forgot" className="text-sm font-medium text-brand-quiz dark:text-fuchsia-300 hover:underline">
+            Zaboravljena lozinka?
+          </Link>
+        </div>
+        {login.isError && <AuthError message={(login.error as Error).message} />}
+        <Button type="submit" size="lg" fullWidth loading={login.isPending}>
+          {login.isPending ? "Prijava..." : "Prijavi se"}
         </Button>
         {(import.meta.env.DEV || isDemo) && (
-          <div className="rounded-md bg-gray-50 px-3 py-2 text-sm">
-            <p className="mb-2 font-medium text-gray-600">Dev brza prijava:</p>
+          <div className="rounded-xl bg-gray-50 dark:bg-zinc-900 px-4 py-3 ring-1 ring-gray-200 dark:ring-zinc-700">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-zinc-400">Dev brza prijava</p>
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -100,16 +115,13 @@ export function LoginPage() {
             </div>
           </div>
         )}
-        <p className="text-center text-sm text-gray-600">
-          <Link to="/register" className="font-medium text-brand-quiz hover:underline">
+        <p className="text-center text-sm text-gray-600 dark:text-zinc-400">
+          Nemaš nalog?{" "}
+          <Link to="/register" className="font-semibold text-brand-quiz dark:text-fuchsia-300 hover:underline">
             Registruj se
-          </Link>
-          {" | "}
-          <Link to="/forgot" className="font-medium text-brand-quiz hover:underline">
-            Zaboravljena lozinka?
           </Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

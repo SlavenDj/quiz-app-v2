@@ -334,13 +334,16 @@ export async function getLeaderboard(limit = 50, opts?: { edition?: string; mont
   });
   const agg = new Map<
     number,
-    { userId: number; firstName: string; lastName: string; avatarFile: string | null; totalScore: number; totalDurationSec: number; quizzesPlayed: number }
+    { userId: number; firstName: string; lastName: string; username: string | null; country: string | null; city: string | null; avatarFile: string | null; totalScore: number; totalDurationSec: number; quizzesPlayed: number }
   >();
   for (const a of firsts) {
     const cur = agg.get(a.userId) ?? {
       userId: a.userId,
       firstName: a.user.firstName,
       lastName: a.user.lastName,
+      username: a.user.username,
+      country: a.user.country,
+      city: a.user.city,
       avatarFile: a.user.avatarFile,
       totalScore: 0,
       totalDurationSec: 0,

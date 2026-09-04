@@ -19,15 +19,15 @@ export function QuizResult() {
     }
   }, [passed]);
   if (isLoading) return <Spinner label="Ucitavanje..." />;
-  if (error) return <p className="page-container text-status-danger">Greska: {(error as Error).message}</p>;
+  if (error) return <p className="page-container text-status-danger dark:text-red-400">Greska: {(error as Error).message}</p>;
   return (
     <div className="page-container">
       <Card className="mx-auto w-full max-w-2xl rounded-card text-center shadow-card">
         <Badge tone={passed ? "success" : "danger"}>{passed ? "Polozio/la" : "Nije polozeno"}</Badge>
-        <h1 className="mt-2 break-words text-2xl font-bold text-gray-900">
+        <h1 className="mt-2 break-words text-2xl font-bold text-gray-900 dark:text-zinc-100">
           {data.quizName}: {data.score}/{data.maxScore}
         </h1>
-        <p className="mt-1 text-sm text-gray-500">Vrijeme: {Math.floor((data.durationSec ?? 0) / 60)}:{String((data.durationSec ?? 0) % 60).padStart(2, "0")}</p>
+        <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">Vrijeme: {Math.floor((data.durationSec ?? 0) / 60)}:{String((data.durationSec ?? 0) % 60).padStart(2, "0")}</p>
       </Card>
       <div className="mx-auto mt-4 flex w-full max-w-2xl flex-col gap-4">
         {data.review.map((r: any, i: number) => {
@@ -40,7 +40,7 @@ export function QuizResult() {
           return (
             <Card key={r.questionId} className="min-w-0 rounded-card shadow-card">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
                   Pitanje {i + 1} ({r.type})
                 </p>
                 {questionCorrect === null ? (
@@ -52,11 +52,11 @@ export function QuizResult() {
                 )}
               </div>
               <div
-                className="mt-2 min-w-0 break-words text-sm text-gray-900 sm:text-base"
+                className="mt-2 min-w-0 break-words text-sm text-gray-900 dark:text-zinc-100 sm:text-base"
                 dangerouslySetInnerHTML={{ __html: r.bodyHtml }}
               />
               {r.type === "text" ? (
-                <p className="mt-2 min-w-0 break-words text-sm text-gray-700">Vas odgovor: {r.userText ?? "-"}</p>
+                <p className="mt-2 min-w-0 break-words text-sm text-gray-700 dark:text-zinc-300">Vas odgovor: {r.userText ?? "-"}</p>
               ) : (
                 <ul className="mt-2 flex flex-col gap-2">
                   {r.answers.map((a: any) => {
@@ -64,9 +64,9 @@ export function QuizResult() {
                     return (
                       <li
                         key={a.id}
-                        className="flex min-w-0 flex-wrap items-center gap-2 rounded-card border border-gray-100 bg-gray-50 px-3 py-2 text-sm"
+                        className="flex min-w-0 flex-wrap items-center gap-2 rounded-card border border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 px-3 py-2 text-sm"
                       >
-                        <span className="min-w-0 flex-1 break-words text-gray-900">{a.body}</span>
+                        <span className="min-w-0 flex-1 break-words text-gray-900 dark:text-zinc-100">{a.body}</span>
                         {a.isCorrect && picked && <Badge tone="success">Tačno</Badge>}
                         {a.isCorrect && !picked && <Badge tone="brand">Propušteno</Badge>}
                         {!a.isCorrect && picked && <Badge tone="danger">Pogrešno</Badge>}
@@ -85,7 +85,7 @@ export function QuizResult() {
         </Button>
         <Link
           to="/home"
-          className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded border border-brand-quiz bg-transparent px-4 py-2 font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20"
+          className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded border border-brand-quiz bg-transparent px-4 py-2 font-medium text-brand-quiz dark:text-fuchsia-300 transition-colors hover:bg-brand-muted/20"
         >
           Nazad na module
         </Link>

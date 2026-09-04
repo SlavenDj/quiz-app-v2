@@ -9,6 +9,7 @@ import { useAuthStore } from "../../stores/auth";
 import { Button } from "../../components/ui/Button";
 import { TextInput } from "../../components/ui/TextInput";
 import { PasswordStrength } from "../../components/PasswordStrength";
+import { AuthLayout, AuthError } from "./AuthLayout";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -25,10 +26,19 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="auth-card">
-      <h1 className="text-2xl font-bold text-brand-quiz">Registracija</h1>
+    <AuthLayout
+      title="Napravi nalog"
+      subtitle="Besplatno je — za minut si na rang listi."
+      icon={
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" aria-hidden>
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M19 8v6M22 11h-6" />
+        </svg>
+      }
+    >
       <form
-        className="mt-4 flex flex-col gap-4"
+        className="flex flex-col gap-4"
         onSubmit={handleSubmit(async (data) => {
           setLocalError(null);
           const res = await reg.mutateAsync(data);
@@ -39,75 +49,83 @@ export function RegisterPage() {
           }
         })}
       >
-        <TextInput
-          id="firstName"
-          label="Ime"
-          placeholder="Ime"
-          className="w-full"
-          error={errors.firstName?.message}
-          {...register("firstName")}
-        />
-        <TextInput
-          id="lastName"
-          label="Prezime"
-          placeholder="Prezime"
-          className="w-full"
-          error={errors.lastName?.message}
-          {...register("lastName")}
-        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <TextInput
+            id="firstName"
+            label="Ime"
+            placeholder="npr. Amina"
+            autoComplete="given-name"
+            className="w-full"
+            error={errors.firstName?.message}
+            {...register("firstName")}
+          />
+          <TextInput
+            id="lastName"
+            label="Prezime"
+            placeholder="npr. Hodžić"
+            autoComplete="family-name"
+            className="w-full"
+            error={errors.lastName?.message}
+            {...register("lastName")}
+          />
+        </div>
         <TextInput
           id="email"
           label="Email"
-          placeholder="Email"
+          type="email"
+          placeholder="npr. amina@gmail.com"
+          autoComplete="email"
           className="w-full"
           error={errors.email?.message}
           {...register("email")}
         />
-        <TextInput
-          id="password"
-          label="Lozinka"
-          type="password"
-          placeholder="Lozinka (min 8)"
-          className="w-full"
-          error={errors.password?.message}
-          {...register("password")}
-        />
-        <PasswordStrength password={passwordValue ?? ""} />
-        <TextInput
-          id="country"
-          label="Država"
-          placeholder="Drzava"
-          className="w-full"
-          error={errors.country?.message}
-          {...register("country")}
-        />
-        <TextInput
-          id="city"
-          label="Grad"
-          placeholder="Grad"
-          className="w-full"
-          error={errors.city?.message}
-          {...register("city")}
-        />
-        {reg.isError && (
-          <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
-            {(reg.error as Error).message}
-          </p>
-        )}
-        {localError && (
-          <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
-            {localError}
-          </p>
-        )}
-        <Button type="submit" disabled={reg.isPending} className="w-full">
-          {reg.isPending ? "..." : "Registruj se"}
+        <div>
+          <TextInput
+            id="password"
+            label="Lozinka"
+            type="password"
+            autoComplete="new-password"
+            placeholder="Minimum 8 karaktera"
+            className="w-full"
+            error={errors.password?.message}
+            {...register("password")}
+          />
+          <div className="mt-2">
+            <PasswordStrength password={passwordValue ?? ""} />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <TextInput
+            id="country"
+            label="Država"
+            placeholder="npr. BiH"
+            autoComplete="country-name"
+            className="w-full"
+            error={errors.country?.message}
+            {...register("country")}
+          />
+          <TextInput
+            id="city"
+            label="Grad"
+            placeholder="npr. Sarajevo"
+            autoComplete="address-level2"
+            className="w-full"
+            error={errors.city?.message}
+            {...register("city")}
+          />
+        </div>
+        {reg.isError && <AuthError message={(reg.error as Error).message} />}
+        {localError && <AuthError message={localError} />}
+        <Button type="submit" size="lg" fullWidth loading={reg.isPending}>
+          {reg.isPending ? "Registracija..." : "Registruj se"}
         </Button>
-        <p className="text-center text-sm text-gray-600">
-          <Link to="/login" className="font-medium text-brand-quiz hover:underline">
-            Vec imas nalog?
+        <p className="text-center text-sm text-gray-600 dark:text-zinc-400">
+          Već imaš nalog?{" "}
+          <Link to="/login" className="font-semibold text-brand-quiz dark:text-fuchsia-300 hover:underline">
+            Prijavi se
           </Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

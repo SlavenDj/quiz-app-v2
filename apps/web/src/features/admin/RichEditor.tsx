@@ -3,9 +3,9 @@ import StarterKit from "@tiptap/starter-kit";
 
 const toolbarButtonBase =
   "rounded border px-2 py-1 text-sm transition-colors disabled:opacity-50";
-const toolbarButtonIdle = "border-brand-muted bg-white hover:bg-gray-50";
+const toolbarButtonIdle = "border-brand-muted bg-white hover:bg-gray-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800";
 const toolbarButtonActive =
-  "border-brand-quiz bg-brand-muted/25 font-bold text-brand-quiz";
+  "border-brand-quiz bg-brand-muted/25 font-bold text-brand-quiz dark:text-fuchsia-300";
 
 export function RichEditor({
   initialHtml,
@@ -54,7 +54,7 @@ export function RichEditor({
       </div>
       <EditorContent
         editor={editor}
-        className="tiptap min-h-[120px] rounded border border-brand-muted bg-white p-3 [&_.ProseMirror:focus]:outline-none"
+        className="tiptap min-h-[120px] rounded border border-brand-muted bg-white p-3 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 [&_.ProseMirror:focus]:outline-none"
       />
     </div>
   );

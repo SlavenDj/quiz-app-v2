@@ -11,7 +11,11 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 font-sans text-gray-900 antialiased;
+    @apply bg-gray-50 font-sans text-gray-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
+    color-scheme: light;
+  }
+  .dark body {
+    color-scheme: dark;
   }
   ::selection {
     background: var(--brand-muted);

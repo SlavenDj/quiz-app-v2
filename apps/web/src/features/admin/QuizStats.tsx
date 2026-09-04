@@ -18,18 +18,18 @@ export function QuizStats() {
     queryFn: () => api(`/api/admin/quizzes/${id}/stats`) as Promise<Stats>,
   });
   if (isLoading) return <Spinner label="Ucitavanje..." />;
-  if (error) return <p className="page-container text-status-danger">Greska: {(error as Error).message}</p>;
+  if (error) return <p className="page-container text-status-danger dark:text-red-400">Greska: {(error as Error).message}</p>;
   const s = data as Stats;
   return (
     <div className="page-container">
-      <Link to="/admin/modules" className="mb-4 inline-flex min-h-[44px] items-center font-medium text-brand-quiz hover:underline">
+      <Link to="/admin/modules" className="mb-4 inline-flex min-h-[44px] items-center font-medium text-brand-quiz hover:underline dark:text-fuchsia-300">
         ← Nazad na module
       </Link>
-      <h1 className="mb-4 text-2xl font-bold text-gray-900">Statistika kviza #{id}</h1>
+      <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-zinc-100">Statistika kviza #{id}</h1>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card><p className="text-sm text-gray-500">Pokušaja</p><p className="text-2xl font-bold">{s.attempts}</p></Card>
-        <Card><p className="text-sm text-gray-500">Prosječan rezultat</p><p className="text-2xl font-bold">{s.avgScore.toFixed(2)}</p></Card>
-        <Card><p className="text-sm text-gray-500">Prosječno vrijeme (s)</p><p className="text-2xl font-bold">{Math.round(s.avgDurationSec)}s</p></Card>
+        <Card><p className="text-sm text-gray-500 dark:text-zinc-400">Pokušaja</p><p className="text-2xl font-bold">{s.attempts}</p></Card>
+        <Card><p className="text-sm text-gray-500 dark:text-zinc-400">Prosječan rezultat</p><p className="text-2xl font-bold">{s.avgScore.toFixed(2)}</p></Card>
+        <Card><p className="text-sm text-gray-500 dark:text-zinc-400">Prosječno vrijeme (s)</p><p className="text-2xl font-bold">{Math.round(s.avgDurationSec)}s</p></Card>
       </div>
       <div className="mt-4 flex flex-col gap-2">
         {s.perQuestion.map((q) => {
@@ -38,7 +38,7 @@ export function QuizStats() {
           return (
             <Card key={q.questionId}>
               <p className="text-sm font-medium">Pitanje #{q.questionId} ({q.type}) — {q.correct}/{q.attempts} ({pct}%)</p>
-              <div className="mt-2 h-2 w-full rounded bg-gray-200">
+              <div className="mt-2 h-2 w-full rounded bg-gray-200 dark:bg-zinc-700">
                 <div className={`h-2 rounded ${bar}`} style={{ width: `${pct}%` }} />
               </div>
             </Card>

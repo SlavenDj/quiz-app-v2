@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useQuizDetail } from "./api";
 import { MultiInput, SingleInput, TextInput } from "../quiz/QuestionInputs";
 import { Badge } from "../../components/ui/Badge";
-import { Button } from "../../components/ui/Button";
+import { Button, buttonClasses } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Spinner } from "../../components/ui/Spinner";
 
@@ -66,7 +66,7 @@ export function AdminPreview() {
   if (isLoading) return <Spinner />;
   if (error)
     return (
-      <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+      <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
         Greska: {(error as Error).message}
       </p>
     );
@@ -77,7 +77,7 @@ export function AdminPreview() {
       <div className="flex flex-col gap-4">
         <Link
           to="/admin/modules"
-          className="inline-flex w-fit items-center rounded border border-brand-quiz px-3 py-1.5 text-sm font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20"
+          className="inline-flex w-fit items-center rounded border border-brand-quiz px-3 py-1.5 text-sm font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20 dark:text-fuchsia-300"
         >
           ← Nazad
         </Link>
@@ -85,7 +85,7 @@ export function AdminPreview() {
           <h1 className="break-words text-xl font-bold">Pregled kviza: {data?.name ?? ""}</h1>
           <Badge tone="brand">Preview mode — pokusaji se ne evidentiraju</Badge>
         </div>
-        <p className="text-sm text-gray-500">Kviz nema pitanja.</p>
+        <p className="text-sm text-gray-500 dark:text-zinc-400">Kviz nema pitanja.</p>
       </div>
     );
 
@@ -104,7 +104,7 @@ export function AdminPreview() {
       <div className="flex flex-col gap-4">
         <Link
           to="/admin/modules"
-          className="inline-flex w-fit items-center rounded border border-brand-quiz px-3 py-1.5 text-sm font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20"
+          className="inline-flex w-fit items-center rounded border border-brand-quiz px-3 py-1.5 text-sm font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20 dark:text-fuchsia-300"
         >
           ← Nazad na module
         </Link>
@@ -145,20 +145,20 @@ export function AdminPreview() {
         {results.map(({ q: item, ok }, i) => (
           <Card key={item.id}>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-gray-900">Pitanje {i + 1}</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">Pitanje {i + 1}</p>
               <Badge tone={ok ? "success" : "danger"}>{ok ? "Tacno" : "Netacno"}</Badge>
             </div>
             <div
-              className="mt-2 min-w-0 break-words text-base text-gray-900"
+              className="mt-2 min-w-0 break-words text-base text-gray-900 dark:text-zinc-100"
               dangerouslySetInnerHTML={{ __html: item.bodyHtml }}
             />
             {item.type === "text" ? (
               <div className="mt-2 text-sm">
-                <p className="break-words text-gray-700">
+                <p className="break-words text-gray-700 dark:text-zinc-300">
                   Vas odgovor:{" "}
                   <span className="font-medium">{answers[item.id]?.text.trim() || "—"}</span>
                 </p>
-                <p className="mt-1 break-words text-gray-700">
+                <p className="mt-1 break-words text-gray-700 dark:text-zinc-300">
                   Ocekivani odgovor:{" "}
                   <span className="font-medium">{item.expectedText ?? "—"}</span>
                 </p>
@@ -170,8 +170,8 @@ export function AdminPreview() {
                     key={a.id}
                     className={`break-words rounded border px-2 py-1 ${
                       a.isCorrect
-                        ? "border-green-200 bg-green-50 text-green-800"
-                        : "border-gray-200 text-gray-600"
+                        ? "border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-300"
+                        : "border-gray-200 text-gray-600 dark:border-zinc-800 dark:text-zinc-400"
                     }`}
                   >
                     {a.body}
@@ -198,7 +198,7 @@ export function AdminPreview() {
     <div className="flex flex-col gap-4">
       <Link
         to="/admin/modules"
-        className="inline-flex w-fit items-center rounded border border-brand-quiz px-3 py-1.5 text-sm font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20"
+        className={buttonClasses("ghost", "sm", "w-fit border")}
       >
         ← Nazad
       </Link>
@@ -206,7 +206,7 @@ export function AdminPreview() {
         <h1 className="break-words text-xl font-bold">Pregled kviza: {data.name}</h1>
         <Badge tone="brand">Preview mode — pokusaji se ne evidentiraju</Badge>
       </div>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-gray-500 dark:text-zinc-400">
         Odgovoreno: {answeredCount}/{questions.length} | Pitanje {safeIndex + 1}/{questions.length}
       </p>
       <div className="flex flex-wrap gap-2">
@@ -222,7 +222,7 @@ export function AdminPreview() {
               className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
                 done
                   ? "bg-brand-nav text-white"
-                  : "border border-brand-muted/60 bg-white text-gray-700 hover:border-brand-quiz"
+                  : "border border-brand-muted/60 bg-white text-gray-700 hover:border-brand-quiz dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
               } ${current ? "ring-2 ring-brand-quiz ring-offset-2" : ""} disabled:cursor-default`}
             >
               {i + 1}
@@ -232,7 +232,7 @@ export function AdminPreview() {
       </div>
       <Card>
         <div
-          className="min-w-0 break-words text-base text-gray-900"
+          className="min-w-0 break-words text-base text-gray-900 dark:text-zinc-100"
           dangerouslySetInnerHTML={{ __html: q.bodyHtml }}
         />
         {q.imageUrl && (

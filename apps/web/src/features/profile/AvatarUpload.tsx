@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMe } from "../auth/hooks";
 import { useDeleteAvatar, useUploadAvatar, type ProfileUser } from "./api";
 import { Card } from "../../components/ui/Card";
+import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
@@ -87,10 +88,10 @@ export function AvatarUpload() {
         <div className="flex items-center gap-4">
           <AvatarFace name={identity} initial={initial} preview={shown} currentFile={profile?.avatarFile ?? null} />
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-gray-900">
+            <p className="truncate text-sm font-medium text-gray-900 dark:text-zinc-100">
               {profile?.username || profile?.email || "Korisnik"}
             </p>
-            <p className="text-xs text-gray-500">JPEG, PNG ili WEBP do 5MB.</p>
+            <p className="text-xs text-gray-500 dark:text-zinc-400">JPEG, PNG ili WEBP do 5MB.</p>
           </div>
         </div>
 
@@ -111,10 +112,10 @@ export function AvatarUpload() {
             dragging ? "border-brand-nav bg-brand-muted/20" : "border-brand-muted/60 hover:border-brand-quiz"
           }`}
         >
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">
             {file ? file.name : "Prevuci sliku ovde ili klikni za izbor"}
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-500 dark:text-zinc-400">
             {file
               ? `${(file.size / 1024).toFixed(0)} KB — spremno za upload`
               : "Pregled se pojavljuje odmah"}
@@ -133,8 +134,10 @@ export function AvatarUpload() {
           <Button
             type="button"
             variant="primary"
+            size="md"
             onClick={onUpload}
-            disabled={!file || upload.isPending}
+            loading={upload.isPending}
+            disabled={!file}
             className="sm:w-auto sm:min-w-[140px]"
           >
             {upload.isPending ? "Upload..." : "Sačuvaj sliku"}
@@ -155,7 +158,7 @@ export function AvatarUpload() {
               type="button"
               variant="danger"
               onClick={onDelete}
-              disabled={del.isPending}
+              loading={del.isPending}
               className="sm:ml-auto sm:w-auto"
             >
               {del.isPending ? "Brisanje..." : "Obriši avatar"}
@@ -164,16 +167,7 @@ export function AvatarUpload() {
         </div>
 
         {message && (
-          <p
-            role="status"
-            className={
-              isSuccess
-                ? "rounded-md bg-green-50 px-3 py-2 text-sm text-status-success ring-1 ring-green-200"
-                : "rounded-md bg-red-50 px-3 py-2 text-sm text-status-danger ring-1 ring-red-200"
-            }
-          >
-            {message}
-          </p>
+          <Alert tone={isSuccess ? "success" : "error"}>{message}</Alert>
         )}
       </div>
     </Card>
@@ -197,7 +191,7 @@ function AvatarFace({ name, initial, preview, currentFile }: { name: string; ini
     <div
       role="img"
       aria-label="Avatar"
-      className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-brand-muted/25 text-2xl font-semibold text-brand-quiz ring-2 ring-brand-muted/40"
+      className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-brand-muted/25 text-2xl font-semibold text-brand-quiz dark:text-fuchsia-300 ring-2 ring-brand-muted/40"
     >
       {initial}
     </div>

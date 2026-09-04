@@ -21,15 +21,15 @@ export function AttemptHistory({ quizId }: { quizId: number }) {
     queryFn: () => api(`/api/quizzes/${quizId}/attempts`) as Promise<AttemptRow[]>,
   });
 
-  if (isLoading) return <p className="text-sm text-gray-500">Učitavanje historije...</p>;
-  if (error) return <p className="text-sm text-status-danger">Greška: {(error as Error).message}</p>;
-  if (!data || data.length === 0) return <p className="text-sm text-gray-500">Nema prethodnih pokušaja.</p>;
+  if (isLoading) return <p className="text-sm text-gray-500 dark:text-zinc-400">Učitavanje historije...</p>;
+  if (error) return <p className="text-sm text-status-danger dark:text-red-400">Greška: {(error as Error).message}</p>;
+  if (!data || data.length === 0) return <p className="text-sm text-gray-500 dark:text-zinc-400">Nema prethodnih pokušaja.</p>;
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
         <thead>
-          <tr className="text-gray-500">
+          <tr className="text-gray-500 dark:text-zinc-400">
             <th className="px-2 py-1">Pokušaj</th>
             <th className="px-2 py-1">Rezultat</th>
             <th className="px-2 py-1">Trajanje</th>
@@ -38,7 +38,7 @@ export function AttemptHistory({ quizId }: { quizId: number }) {
         </thead>
         <tbody>
           {data.map((a) => (
-            <tr key={a.attemptNo} className="border-t border-gray-100">
+            <tr key={a.attemptNo} className="border-t border-gray-100 dark:border-zinc-800">
               <td className="px-2 py-1 font-medium">Pokušaj {a.attemptNo}</td>
               <td className="px-2 py-1">
                 {a.score}/{a.maxScore}

@@ -4,6 +4,8 @@ import { api } from "../../lib/api";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { Alert } from "../../components/ui/Alert";
+import { Select } from "../../components/ui/Select";
 import { Spinner } from "../../components/ui/Spinner";
 import { TextInput } from "../../components/ui/TextInput";
 
@@ -60,9 +62,9 @@ export function QuestionBank({ quizId }: { quizId: number }) {
             onChange={(e) => setQ(e.target.value)}
           />
         </div>
-        <select
+        <Select
           aria-label="Tip pitanja"
-          className="rounded border border-brand-muted bg-white px-2 py-1.5 text-sm outline-none focus:border-brand-quiz"
+          className="sm:w-auto"
           value={type}
           onChange={(e) => setType(e.target.value)}
         >
@@ -70,23 +72,19 @@ export function QuestionBank({ quizId }: { quizId: number }) {
           <option value="single">Jedan odgovor</option>
           <option value="multiple">Vise odgovora</option>
           <option value="text">Tekst</option>
-        </select>
+        </Select>
         <Button type="submit">Pretrazi</Button>
       </form>
       {isLoading ? <Spinner /> : null}
-      {error ? (
-        <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          Greska: {(error as Error).message}
-        </p>
-      ) : null}
+      {error ? <Alert tone="error">Greska: {(error as Error).message}</Alert> : null}
       {attach.error ? (
-        <p className="mb-2 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <Alert tone="error" className="mb-2">
           Greska: {(attach.error as Error).message}
-        </p>
+        </Alert>
       ) : null}
       <div className="flex flex-col gap-2">
         {data?.map((item) => (
-          <div key={item.id} className="flex flex-wrap items-center gap-2 rounded border border-gray-200 px-3 py-2">
+          <div key={item.id} className="flex flex-wrap items-center gap-2 rounded border border-gray-200 px-3 py-2 dark:border-zinc-800">
             <div className="min-w-0 flex-1">
               <p className="break-words text-sm">{stripHtml(item.bodyHtml)}</p>
               <div className="mt-1 flex flex-wrap gap-2">
@@ -96,7 +94,7 @@ export function QuestionBank({ quizId }: { quizId: number }) {
             </div>
             <Button
               variant="outline"
-              className="text-sm"
+              size="sm"
               disabled={attach.isPending}
               onClick={() => attach.mutate(item.id)}
             >
@@ -104,7 +102,7 @@ export function QuestionBank({ quizId }: { quizId: number }) {
             </Button>
           </div>
         ))}
-        {data && data.length === 0 ? <p className="text-sm text-gray-500">Nema rezultata.</p> : null}
+        {data && data.length === 0 ? <p className="text-sm text-gray-500 dark:text-zinc-400">Nema rezultata.</p> : null}
       </div>
     </Card>
   );

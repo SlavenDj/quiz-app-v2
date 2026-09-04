@@ -2,10 +2,8 @@ import { useState } from "react";
 import { useUpdateQuiz } from "./api";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { Input } from "../../components/ui/Input";
 import { TextInput } from "../../components/ui/TextInput";
-
-const inputClassName =
-  "w-full rounded border border-brand-muted px-3 py-2 text-sm outline-none focus:border-brand-quiz";
 
 export function QuizMetaForm({ quizId, quiz }: { quizId: number; quiz: any }) {
   const updateQuiz = useUpdateQuiz(quizId);
@@ -43,29 +41,27 @@ export function QuizMetaForm({ quizId, quiz }: { quizId: number; quiz: any }) {
             placeholder="Opis"
           />
         </div>
-        <label className="flex min-w-0 flex-col gap-1 text-sm font-medium">
-          Limit (s):
-          <input
-            type="number"
-            className={inputClassName}
-            value={meta.timeLimitSec}
-            onChange={(e) => setMeta({ ...meta, timeLimitSec: Number(e.target.value) })}
-            min={60}
-          />
-        </label>
-        <label className="flex min-w-0 flex-col gap-1 text-sm font-medium">
-          Pokusaji:
-          <input
-            type="number"
-            className={inputClassName}
-            value={meta.maxAttempts}
-            onChange={(e) => setMeta({ ...meta, maxAttempts: Number(e.target.value) })}
-            min={1}
-            max={10}
-          />
-        </label>
+        <Input
+          id="quiz-timeLimit"
+          label="Limit (s)"
+          type="number"
+          value={meta.timeLimitSec}
+          onChange={(e) => setMeta({ ...meta, timeLimitSec: Number(e.target.value) })}
+          min={60}
+        />
+        <Input
+          id="quiz-attempts"
+          label="Pokušaji"
+          type="number"
+          value={meta.maxAttempts}
+          onChange={(e) => setMeta({ ...meta, maxAttempts: Number(e.target.value) })}
+          min={1}
+          max={10}
+        />
         <div className="sm:col-span-2">
-          <Button type="submit">Spasi</Button>
+          <Button type="submit" loading={updateQuiz.isPending}>
+            Spasi
+          </Button>
         </div>
       </form>
     </Card>

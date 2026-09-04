@@ -1,30 +1,18 @@
-import { forwardRef, type InputHTMLAttributes } from "react";
+import { forwardRef } from "react";
+import { Input, type InputProps } from "./Input";
 
-export interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface TextInputProps extends InputProps {
   label?: string;
   error?: string;
 }
 
+/**
+ * Backwards-compatible alias for the old TextInput.
+ * New code should import { Input } from "./Input" (or from "../ui").
+ */
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function TextInput(
-  { label, error, id, className = "", ...props },
+  props,
   ref
 ) {
-  return (
-    <div className="flex flex-col gap-1">
-      {label && (
-        <label htmlFor={id} className="text-sm font-medium">
-          {label}
-        </label>
-      )}
-      <input
-        id={id}
-        ref={ref}
-        className={`rounded border px-3 py-2 outline-none focus:border-brand-quiz ${
-          error ? "border-red-500" : "border-brand-muted"
-        } ${className}`}
-        {...props}
-      />
-      {error && <span className="text-sm text-red-600">{error}</span>}
-    </div>
-  );
+  return <Input ref={ref} {...props} />;
 });

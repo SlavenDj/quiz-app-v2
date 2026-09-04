@@ -2,8 +2,10 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useAdminModules, useCreateModule, useDeleteModule, useUpdateModule } from "./api";
 import { Badge, statusTone } from "../../components/ui/Badge";
-import { Button } from "../../components/ui/Button";
+import { Button, buttonClasses } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { Alert } from "../../components/ui/Alert";
+import { Select } from "../../components/ui/Select";
 import { Spinner } from "../../components/ui/Spinner";
 import { TextInput } from "../../components/ui/TextInput";
 import { useCountdown } from "../../lib/useCountdown";
@@ -13,7 +15,7 @@ const MODULE_STATUSES = ["Locked", "InProgress", "Finished"] as const;
 function AdminModuleCountdown({ startAt }: { startAt: string | Date }) {
   const left = useCountdown(startAt);
   if (!left) return null;
-  return <p className="text-sm text-gray-500">🔒 Otključava se za {left}</p>;
+  return <p className="text-sm text-gray-500 dark:text-zinc-400">🔒 Otključava se za {left}</p>;
 }
 
 function toLocalInput(iso: unknown): string {
@@ -38,7 +40,7 @@ function EditModuleForm({ m, onDone }: { m: any; onDone: () => void }) {
 
   return (
     <form
-      className="flex flex-col gap-2 border-t border-gray-100 pt-3"
+      className="flex flex-col gap-2 border-t border-gray-100 pt-3 dark:border-zinc-800"
       onSubmit={async (e) => {
         e.preventDefault();
         setFormError(null);
@@ -83,26 +85,22 @@ function EditModuleForm({ m, onDone }: { m: any; onDone: () => void }) {
           onChange={(e) => setStartAt(e.target.value)}
         />
         <TextInput label="Kraj" type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} />
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium">Status</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="rounded border border-brand-muted bg-white px-3 py-2 outline-none focus:border-brand-quiz"
-          >
-            {MODULE_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select
+          id={`module-status-${m.id}`}
+          label="Status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+        >
+          {MODULE_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </Select>
       </div>
-      {formError ? (
-        <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</p>
-      ) : null}
+      {formError ? <Alert tone="error">{formError}</Alert> : null}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={update.isPending}>
+        <Button type="submit" loading={update.isPending}>
           {update.isPending ? "Čuvanje..." : "Sačuvaj"}
         </Button>
         <Button type="button" variant="outline" onClick={onDone}>
@@ -122,11 +120,7 @@ export function AdminModules() {
 
   if (isLoading) return <Spinner />;
   if (error)
-    return (
-      <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-        Greska: {(error as Error).message}
-      </p>
-    );
+    return <Alert tone="error">Greska: {(error as Error).message}</Alert>;
 
   return (
     <div className="flex flex-col gap-4">
@@ -180,22 +174,19 @@ export function AdminModules() {
               ) : null}
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link
-                to={`/admin/modules/${m.id}`}
-                className="rounded bg-brand-nav px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-quiz"
-              >
+              <Link to={`/admin/modules/${m.id}`} className={buttonClasses("primary", "sm")}>
                 Kvizovi
               </Link>
               <Button
                 variant="outline"
-                className="text-sm"
+                size="sm"
                 onClick={() => setEditingId(editingId === m.id ? null : m.id)}
               >
                 Uredi
               </Button>
               <Button
                 variant="danger"
-                className="text-sm"
+                size="sm"
                 onClick={async () => {
                   if (confirm(`Obrisati ${m.name}?`)) await del.mutateAsync(m.id);
                 }}

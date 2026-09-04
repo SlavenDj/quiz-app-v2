@@ -19,11 +19,11 @@ export function PasswordStrength({ password }: { password: string }) {
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className={`h-1.5 flex-1 rounded ${i < score ? activeColor : "bg-gray-200"}`}
+            className={`h-1.5 flex-1 rounded ${i < score ? activeColor : "bg-gray-200 dark:bg-zinc-700"}`}
           />
         ))}
       </div>
-      {label && <p className="mt-1 text-xs text-gray-600">{label}</p>}
+      {label && <p className="mt-1 text-xs text-gray-600 dark:text-zinc-400">{label}</p>}
     </div>
   );
 }

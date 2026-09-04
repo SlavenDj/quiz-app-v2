@@ -53,8 +53,20 @@ let seq = { user: 100, quiz: 100, question: 100, answer: 1000, attempt: 100, mod
 const users: DemoUser[] = [
   { id: 1, email: "admin@plusultra.ba", password: "admin12345", firstName: "Admin", lastName: "PlusUltra", role: "admin", country: null, city: null, bio: null, nickname: null, username: "admin", avatarFile: "demo:AU" },
   { id: 2, email: "student@gmail.com", password: "password123", firstName: "Demo", lastName: "Student", role: "student", country: "BiH", city: "Sarajevo", bio: "Volim kvizove.", nickname: null, username: "demo_student", avatarFile: "demo:DS" },
-  { id: 3, email: "ana@gmail.com", password: "password123", firstName: "Ana", lastName: "Anic", role: "student", country: "BiH", city: "Mostar", bio: null, nickname: null, username: "ana", avatarFile: null },
-  { id: 4, email: "marko@gmail.com", password: "password123", firstName: "Marko", lastName: "Markovic", role: "student", country: "Srbija", city: "Beograd", bio: null, nickname: null, username: "marko", avatarFile: null },
+  { id: 3, email: "ana@gmail.com", password: "password123", firstName: "Ana", lastName: "Anić", role: "student", country: "BiH", city: "Mostar", bio: null, nickname: null, username: "ana_a", avatarFile: null },
+  { id: 4, email: "marko@gmail.com", password: "password123", firstName: "Marko", lastName: "Marković", role: "student", country: "Srbija", city: "Beograd", bio: null, nickname: null, username: "marko_m", avatarFile: null },
+  { id: 5, email: "amina@demo.ba", password: "password123", firstName: "Amina", lastName: "Hodžić", role: "student", country: "BiH", city: "Sarajevo", bio: null, nickname: null, username: "amina_h", avatarFile: null },
+  { id: 6, email: "tarik@demo.ba", password: "password123", firstName: "Tarik", lastName: "Muratović", role: "student", country: "BiH", city: "Sarajevo", bio: null, nickname: null, username: "tarik_m", avatarFile: null },
+  { id: 7, email: "lejla@demo.ba", password: "password123", firstName: "Lejla", lastName: "Softić", role: "student", country: "BiH", city: "Mostar", bio: null, nickname: null, username: "lejla_s", avatarFile: null },
+  { id: 8, email: "adnan@demo.ba", password: "password123", firstName: "Adnan", lastName: "Karić", role: "student", country: "BiH", city: "Tuzla", bio: null, nickname: null, username: "adnan_k", avatarFile: null },
+  { id: 9, email: "emina@demo.ba", password: "password123", firstName: "Emina", lastName: "Delić", role: "student", country: "BiH", city: "Zenica", bio: null, nickname: null, username: "emina_d", avatarFile: null },
+  { id: 10, email: "haris@demo.ba", password: "password123", firstName: "Haris", lastName: "Bećirović", role: "student", country: "BiH", city: "Sarajevo", bio: null, nickname: null, username: "haris_b", avatarFile: null },
+  { id: 11, email: "selma@demo.ba", password: "password123", firstName: "Selma", lastName: "Omanović", role: "student", country: "BiH", city: "Bihać", bio: null, nickname: null, username: "selma_o", avatarFile: null },
+  { id: 12, email: "kenan@demo.ba", password: "password123", firstName: "Kenan", lastName: "Salkić", role: "student", country: "BiH", city: "Tuzla", bio: null, nickname: null, username: "kenan_s", avatarFile: null },
+  { id: 13, email: "milica@demo.ba", password: "password123", firstName: "Milica", lastName: "Petrović", role: "student", country: "Srbija", city: "Niš", bio: null, nickname: null, username: "milica_p", avatarFile: null },
+  { id: 14, email: "nikola@demo.ba", password: "password123", firstName: "Nikola", lastName: "Nikolić", role: "student", country: "Hrvatska", city: "Zagreb", bio: null, nickname: null, username: "nikola_n", avatarFile: null },
+  { id: 15, email: "petra@demo.ba", password: "password123", firstName: "Petra", lastName: "Horvat", role: "student", country: "Hrvatska", city: "Split", bio: null, nickname: null, username: "petra_h", avatarFile: null },
+  { id: 16, email: "sara@demo.ba", password: "password123", firstName: "Sara", lastName: "Mujakić", role: "student", country: "BiH", city: "Sarajevo", bio: null, nickname: null, username: "sara_m", avatarFile: null },
 ];
 
 const modules = [
@@ -85,9 +97,27 @@ const quizzes: { id: number; name: string; description: string; introHtml: strin
   },
 ];
 
+const H = 3600000;
 const attempts: DemoAttempt[] = [
   { id: 1, userId: 3, quizId: 1, attemptNo: 1, startedAt: Date.now() - 120000, submittedAt: Date.now() - 60000, score: 2, durationSec: 60, answers: [], order: [] },
   { id: 2, userId: 4, quizId: 1, attemptNo: 1, startedAt: Date.now() - 200000, submittedAt: Date.now() - 100000, score: 3, durationSec: 100, answers: [], order: [] },
+  // Spread-out demo board: recent + older entries so month filter has data.
+  { id: 3, userId: 5, quizId: 1, attemptNo: 1, startedAt: Date.now() - 3 * H, submittedAt: Date.now() - 3 * H + 90000, score: 3, durationSec: 90, answers: [], order: [] },
+  { id: 4, userId: 5, quizId: 2, attemptNo: 1, startedAt: Date.now() - 2 * H, submittedAt: Date.now() - 2 * H + 120000, score: 2, durationSec: 120, answers: [], order: [] },
+  { id: 5, userId: 6, quizId: 1, attemptNo: 1, startedAt: Date.now() - 5 * H, submittedAt: Date.now() - 5 * H + 70000, score: 3, durationSec: 70, answers: [], order: [] },
+  { id: 6, userId: 6, quizId: 2, attemptNo: 1, startedAt: Date.now() - 4 * H, submittedAt: Date.now() - 4 * H + 150000, score: 2, durationSec: 150, answers: [], order: [] },
+  { id: 7, userId: 7, quizId: 1, attemptNo: 1, startedAt: Date.now() - 26 * H, submittedAt: Date.now() - 26 * H + 110000, score: 2, durationSec: 110, answers: [], order: [] },
+  { id: 8, userId: 8, quizId: 1, attemptNo: 1, startedAt: Date.now() - 8 * H, submittedAt: Date.now() - 8 * H + 95000, score: 2, durationSec: 95, answers: [], order: [] },
+  { id: 9, userId: 8, quizId: 2, attemptNo: 1, startedAt: Date.now() - 7 * H, submittedAt: Date.now() - 7 * H + 130000, score: 1, durationSec: 130, answers: [], order: [] },
+  { id: 10, userId: 9, quizId: 1, attemptNo: 1, startedAt: Date.now() - 10 * H, submittedAt: Date.now() - 10 * H + 80000, score: 3, durationSec: 80, answers: [], order: [] },
+  { id: 11, userId: 10, quizId: 1, attemptNo: 1, startedAt: Date.now() - 12 * H, submittedAt: Date.now() - 12 * H + 140000, score: 2, durationSec: 140, answers: [], order: [] },
+  { id: 12, userId: 11, quizId: 1, attemptNo: 1, startedAt: Date.now() - 40 * 24 * H, submittedAt: Date.now() - 40 * 24 * H + 100000, score: 3, durationSec: 100, answers: [], order: [] },
+  { id: 13, userId: 12, quizId: 1, attemptNo: 1, startedAt: Date.now() - 30 * H, submittedAt: Date.now() - 30 * H + 170000, score: 1, durationSec: 170, answers: [], order: [] },
+  { id: 14, userId: 13, quizId: 1, attemptNo: 1, startedAt: Date.now() - 15 * H, submittedAt: Date.now() - 15 * H + 125000, score: 2, durationSec: 125, answers: [], order: [] },
+  { id: 15, userId: 14, quizId: 1, attemptNo: 1, startedAt: Date.now() - 20 * H, submittedAt: Date.now() - 20 * H + 160000, score: 1, durationSec: 160, answers: [], order: [] },
+  { id: 16, userId: 15, quizId: 2, attemptNo: 1, startedAt: Date.now() - 9 * H, submittedAt: Date.now() - 9 * H + 110000, score: 2, durationSec: 110, answers: [], order: [] },
+  { id: 17, userId: 16, quizId: 1, attemptNo: 1, startedAt: Date.now() - 50 * 24 * H, submittedAt: Date.now() - 50 * 24 * H + 90000, score: 2, durationSec: 90, answers: [], order: [] },
+  { id: 18, userId: 2, quizId: 1, attemptNo: 1, startedAt: Date.now() - 6 * H, submittedAt: Date.now() - 6 * H + 105000, score: 2, durationSec: 105, answers: [], order: [] },
 ];
 
 function sessionUser(): DemoUser | null {
@@ -308,7 +338,7 @@ export async function mockApi(path: string, init: RequestInit = {}): Promise<any
   }
   if (url === "/api/leaderboard" && method === "GET") {
     requireAuth();
-    return leaderboard().slice(0, Math.min(Math.max(Number(params.get("limit") ?? 50), 1), 200));
+    return leaderboard(params.get("month")).slice(0, Math.min(Math.max(Number(params.get("limit") ?? 50), 1), 200));
   }
   if (seg(1) === "api" && seg(2) === "users" && method === "GET") {
     requireAuth();
@@ -466,11 +496,18 @@ function playPayload(q: (typeof quizzes)[number], att: DemoAttempt, resumed: boo
   };
 }
 
-function leaderboard() {
-  const agg = new Map<number, { userId: number; firstName: string; lastName: string; avatarFile: string | null; totalScore: number; totalDurationSec: number; quizzesPlayed: number }>();
-  for (const a of attempts.filter((x) => x.attemptNo === 1 && x.submittedAt)) {
+function leaderboard(month?: string | null) {
+  const agg = new Map<number, { userId: number; firstName: string; lastName: string; username: string | null; country: string | null; city: string | null; avatarFile: string | null; totalScore: number; totalDurationSec: number; quizzesPlayed: number }>();
+  let start = 0;
+  let end = Infinity;
+  if (month && /^\d{4}-\d{2}$/.test(month)) {
+    const [y, m] = month.split("-").map(Number);
+    start = Date.UTC(y, m - 1, 1);
+    end = Date.UTC(m === 12 ? y + 1 : y, m === 12 ? 0 : m, 1);
+  }
+  for (const a of attempts.filter((x) => x.attemptNo === 1 && x.submittedAt && x.submittedAt >= start && x.submittedAt < end)) {
     const u = users.find((x) => x.id === a.userId)!;
-    const cur = agg.get(a.userId) ?? { userId: a.userId, firstName: u.firstName, lastName: u.lastName, avatarFile: u.avatarFile, totalScore: 0, totalDurationSec: 0, quizzesPlayed: 0 };
+    const cur = agg.get(a.userId) ?? { userId: a.userId, firstName: u.firstName, lastName: u.lastName, username: u.username, country: u.country, city: u.city, avatarFile: u.avatarFile, totalScore: 0, totalDurationSec: 0, quizzesPlayed: 0 };
     cur.totalScore += a.score;
     cur.totalDurationSec += a.durationSec;
     cur.quizzesPlayed += 1;

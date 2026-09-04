@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useChangePassword } from "./api";
 import { Card } from "../../components/ui/Card";
+import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
 import { TextInput } from "../../components/ui/TextInput";
 import { PasswordStrength } from "../../components/PasswordStrength";
@@ -57,13 +58,13 @@ export function ChangePassword() {
       <div className="mb-4 flex items-center gap-3">
         <span
           aria-hidden
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-muted/25 text-lg font-bold text-brand-quiz"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-muted/25 text-lg font-bold text-brand-quiz dark:text-fuchsia-300"
         >
           **
         </span>
         <div>
           <h2 className="text-lg font-semibold">Lozinka</h2>
-          <p className="text-xs text-gray-500">Redovno je mijenjajte radi sigurnosti</p>
+          <p className="text-xs text-gray-500 dark:text-zinc-400">Redovno je mijenjajte radi sigurnosti</p>
         </div>
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -89,7 +90,7 @@ export function ChangePassword() {
           </div>
           <ul className="mt-2 flex flex-col gap-1">
             {REQUIREMENTS.map((r) => (
-              <li key={r} className="text-xs text-gray-500">
+              <li key={r} className="text-xs text-gray-500 dark:text-zinc-400">
                 • {r}
               </li>
             ))}
@@ -107,32 +108,25 @@ export function ChangePassword() {
           <Button
             type="submit"
             variant="primary"
-            disabled={mutation.isPending}
-            className="min-h-[44px] flex-1"
+            loading={mutation.isPending}
+            className="flex-1"
           >
             {mutation.isPending ? "Čuvanje..." : "Promeni lozinku"}
           </Button>
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => setShowPasswords((s) => !s)}
-            className="min-h-[44px] rounded border border-brand-muted px-3 text-sm font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20"
             aria-pressed={showPasswords}
           >
             {showPasswords ? "Sakrij" : "Prikaži"}
-          </button>
+          </Button>
         </div>
       </form>
       {message && (
-        <p
-          role="status"
-          className={
-            isSuccess
-              ? "mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-status-success ring-1 ring-green-200"
-              : "mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-status-danger ring-1 ring-red-200"
-          }
-        >
+        <Alert tone={isSuccess ? "success" : "error"} className="mt-4">
           {message}
-        </p>
+        </Alert>
       )}
     </Card>
   );

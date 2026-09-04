@@ -18,7 +18,7 @@ export function QuizPlay() {
     return (
       <div className="page-container">
         <Card className="mx-auto w-full max-w-md rounded-card text-center shadow-card">
-          <p className="break-words text-status-danger">Greska: {(start.error as Error).message}</p>
+          <p className="break-words text-status-danger dark:text-red-400">Greska: {(start.error as Error).message}</p>
           <Button variant="primary" onClick={handleStart} className="mt-4 min-h-[44px] w-full">
             Pokušaj ponovo
           </Button>
@@ -28,7 +28,7 @@ export function QuizPlay() {
   }
   if (start.isPending || !play) return <Spinner label="Ucitavanje kviza..." />;
   if (!play.questions || play.questions.length === 0)
-    return <p className="page-container text-gray-500">Kviz nema pitanja</p>;
+    return <p className="page-container text-gray-500 dark:text-zinc-400">Kviz nema pitanja</p>;
 
   const q = play.questions[index];
   const val = answers[q.questionId] ?? { answerIds: [], text: "" };
@@ -37,13 +37,13 @@ export function QuizPlay() {
 
   return (
     <div className="page-container">
-      <div className="sticky top-0 z-10 -mx-4 border-b border-brand-muted/40 bg-white/95 px-4 py-2 backdrop-blur">
+      <div className="sticky top-0 z-10 -mx-4 border-b border-brand-muted/40 bg-white/95 dark:bg-zinc-900/95 px-4 py-2 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2">
-          <p className="min-w-0 flex-1 truncate text-sm font-medium text-gray-900">{play.quizName}</p>
-          <p className={`text-sm font-bold tabular-nums sm:text-base ${lowTime ? "text-status-danger" : "text-gray-900"}`}>
+          <p className="min-w-0 flex-1 truncate text-sm font-medium text-gray-900 dark:text-zinc-100">{play.quizName}</p>
+          <p className={`text-sm font-bold tabular-nums sm:text-base ${lowTime ? "text-status-danger dark:text-red-400" : "text-gray-900 dark:text-zinc-100"}`}>
             {fmt(left)}
           </p>
-          <p className="w-full text-xs text-gray-500 sm:w-auto">
+          <p className="w-full text-xs text-gray-500 dark:text-zinc-400 sm:w-auto">
             Odgovoreno: {answered}/{play.questions.length} | Pitanje {index + 1}/{play.questions.length}
           </p>
         </div>
@@ -61,7 +61,7 @@ export function QuizPlay() {
               className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
                 done
                   ? "bg-brand-nav text-white"
-                  : "border border-brand-muted/60 bg-white text-gray-700 hover:border-brand-quiz"
+                  : "border border-brand-muted/60 bg-white dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:border-brand-quiz"
               } ${current ? "ring-2 ring-brand-quiz ring-offset-2" : ""} disabled:cursor-default`}
             >
               {i + 1}
@@ -70,7 +70,7 @@ export function QuizPlay() {
         })}
       </div>
       <Card className="mt-4 rounded-card shadow-card">
-        <div className="min-w-0 break-words text-base text-gray-900" dangerouslySetInnerHTML={{ __html: q.bodyHtml }} />
+        <div className="min-w-0 break-words text-base text-gray-900 dark:text-zinc-100" dangerouslySetInnerHTML={{ __html: q.bodyHtml }} />
         {q.imageUrl && (
           <img src={q.imageUrl} alt="" className="mt-3 w-full max-w-[300px] rounded-card object-cover" />
         )}
@@ -106,7 +106,7 @@ export function QuizPlay() {
       </div>
       {submit.isError && (
         <Card className="mt-4 rounded-card border-status-danger/40 shadow-card">
-          <p className="break-words text-sm text-status-danger">{(submit.error as Error).message}</p>
+          <p className="break-words text-sm text-status-danger dark:text-red-400">{(submit.error as Error).message}</p>
           <Button
             variant="primary"
             disabled={submit.isPending}

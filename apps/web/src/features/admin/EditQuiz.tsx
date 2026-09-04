@@ -4,12 +4,12 @@ import { useAddQuestion, useQuizDetail, useUpdateQuiz } from "./api";
 import { QuizMetaForm } from "./QuizMetaForm";
 import { QuestionCard } from "./QuestionCard";
 import { Badge } from "../../components/ui/Badge";
-import { Button } from "../../components/ui/Button";
+import { Button, buttonClasses } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { Input } from "../../components/ui/Input";
+import { Select } from "../../components/ui/Select";
+import { Alert } from "../../components/ui/Alert";
 import { Spinner } from "../../components/ui/Spinner";
-
-const selectClassName =
-  "rounded border border-brand-muted bg-white px-2 py-1.5 text-sm outline-none focus:border-brand-quiz";
 
 function toDatetimeLocal(value: string | null | undefined) {
   if (!value) return "";
@@ -38,24 +38,26 @@ function QuizStatusForm({ quizId, quiz }: { quizId: number; quiz: any }) {
           });
         }}
       >
-        <label className="flex min-w-0 flex-col gap-1 text-sm font-medium">
-          Status:
-          <select className={selectClassName} value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="draft">Nacrt</option>
-            <option value="published">Objavljeno</option>
-          </select>
-        </label>
-        <label className="flex min-w-0 flex-col gap-1 text-sm font-medium">
-          Zakazani pocetak:
-          <input
-            type="datetime-local"
-            className="w-full rounded border border-brand-muted px-3 py-2 text-sm outline-none focus:border-brand-quiz"
-            value={scheduledStartAt}
-            onChange={(e) => setScheduledStartAt(e.target.value)}
-          />
-        </label>
+        <Select
+          id="quiz-status-status"
+          label="Status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+        >
+          <option value="draft">Nacrt</option>
+          <option value="published">Objavljeno</option>
+        </Select>
+        <Input
+          id="quiz-status-start"
+          label="Zakazani pocetak"
+          type="datetime-local"
+          value={scheduledStartAt}
+          onChange={(e) => setScheduledStartAt(e.target.value)}
+        />
         <div className="sm:col-span-2">
-          <Button type="submit">Spasi status</Button>
+          <Button type="submit" loading={updateQuiz.isPending}>
+            Spasi status
+          </Button>
         </div>
       </form>
     </Card>
@@ -70,17 +72,13 @@ export function EditQuiz() {
   const [newType, setNewType] = useState("single");
 
   if (isLoading) return <Spinner />;  if (error)
-    return (
-      <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-        Greska: {(error as Error).message}
-      </p>
-    );
+    return <Alert tone="error">Greska: {(error as Error).message}</Alert>;
 
   return (
     <div className="flex flex-col gap-4">
       <Link
         to={data.moduleIds?.length ? `/admin/modules/${data.moduleIds[0]}` : "/admin/modules"}
-        className="inline-flex w-fit items-center rounded border border-brand-quiz px-3 py-1.5 text-sm font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20"
+        className={buttonClasses("ghost", "sm", "w-fit border")}
       >
         ← Nazad
       </Link>
@@ -93,13 +91,20 @@ export function EditQuiz() {
       <h2 className="text-lg font-semibold">Pitanja ({data.questions.length})</h2>
       <Card>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <select className={selectClassName} value={newType} onChange={(e) => setNewType(e.target.value)}>
+          <Select
+            aria-label="Tip novog pitanja"
+            className="sm:w-auto"
+            value={newType}
+            onChange={(e) => setNewType(e.target.value)}
+          >
             <option value="single">Jedan odgovor</option>
             <option value="multiple">Vise odgovora</option>
             <option value="text">Tekst</option>
-          </select>
+          </Select>
           <Button
-            className="text-sm sm:w-fit"
+            size="sm"
+            className="sm:w-fit"
+            loading={addQ.isPending}
             onClick={() => addQ.mutate({ bodyHtml: "<p>Novo pitanje</p>", type: newType })}
           >
             Dodaj pitanje

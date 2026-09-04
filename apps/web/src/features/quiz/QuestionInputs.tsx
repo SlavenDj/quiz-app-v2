@@ -1,4 +1,7 @@
 import type { PlayQuestion } from "./api";
+import { Checkbox } from "../../components/ui/Checkbox";
+import { Radio } from "../../components/ui/Radio";
+import { Textarea } from "../../components/ui/Textarea";
 
 interface AnswerState {
   answerIds: number[];
@@ -19,7 +22,7 @@ export function SingleInput({
       {q.answers.map((a) => (
         <label
           key={a.id}
-          className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-card border border-brand-muted/60 bg-white px-3 py-2 text-base text-gray-900 transition-colors hover:border-brand-quiz"
+          className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-card border border-brand-muted/60 bg-white dark:bg-zinc-900 px-3 py-2 text-base text-gray-900 dark:text-zinc-100 transition-colors hover:border-brand-quiz"
         >
           <input
             type="radio"
@@ -56,7 +59,7 @@ export function MultiInput({
       {q.answers.map((a) => (
         <label
           key={a.id}
-          className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-card border border-brand-muted/60 bg-white px-3 py-2 text-base text-gray-900 transition-colors hover:border-brand-quiz"
+          className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-card border border-brand-muted/60 bg-white dark:bg-zinc-900 px-3 py-2 text-base text-gray-900 dark:text-zinc-100 transition-colors hover:border-brand-quiz"
         >
           <input
             type="checkbox"
@@ -79,12 +82,13 @@ export function TextInput({
   onChange: (v: AnswerState) => void;
 }) {
   return (
-    <textarea
+    <Textarea
       rows={4}
       placeholder="Unesite odgovor"
+      aria-label="Tekstualni odgovor"
       value={value.text}
       onChange={(e) => onChange({ ...value, text: e.target.value })}
-      className="min-h-[44px] w-full rounded-card border border-brand-muted/60 bg-white px-3 py-2 text-base text-gray-900 placeholder:text-gray-400 focus:border-brand-quiz focus:outline-none"
+      className="min-h-[44px] text-base"
     />
   );
 }

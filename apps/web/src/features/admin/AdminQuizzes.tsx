@@ -2,8 +2,10 @@ import { Link, useParams } from "react-router-dom";
 import { Fragment, useState } from "react";
 import { useAdminModuleQuizzes, useCreateQuiz, useDeleteQuiz } from "./api";
 import { Badge } from "../../components/ui/Badge";
-import { Button } from "../../components/ui/Button";
+import { Button, buttonClasses } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { Alert } from "../../components/ui/Alert";
+import { Checkbox } from "../../components/ui/Checkbox";
 import { Spinner } from "../../components/ui/Spinner";
 import { TextInput } from "../../components/ui/TextInput";
 import { QuestionBank } from "./QuestionBank";
@@ -20,18 +22,11 @@ export function AdminQuizzes() {
 
   if (isLoading) return <Spinner />;
   if (error)
-    return (
-      <p className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-        Greska: {(error as Error).message}
-      </p>
-    );
+    return <Alert tone="error">Greska: {(error as Error).message}</Alert>;
 
   return (
     <div className="flex flex-col gap-4">
-      <Link
-        to="/admin/modules"
-        className="inline-flex w-fit items-center rounded border border-brand-quiz px-3 py-1.5 text-sm font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20"
-      >
+      <Link to="/admin/modules" className={buttonClasses("ghost", "sm", "w-fit border")}>
         ← Nazad
       </Link>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -59,11 +54,15 @@ export function AdminQuizzes() {
               minLength={3}
             />
           </div>
-          <label className="flex items-center gap-1.5 whitespace-nowrap text-sm">
-            <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} />
-            Obavijesti studente
-          </label>
-          <Button type="submit">Dodaj kviz</Button>
+          <Checkbox
+            label="Obavijesti studente"
+            checked={notify}
+            onChange={(e) => setNotify(e.target.checked)}
+            className="whitespace-nowrap"
+          />
+          <Button type="submit" loading={create.isPending}>
+            Dodaj kviz
+          </Button>
         </form>
       </Card>
       {data.quizzes.map((q: any) => (
@@ -72,7 +71,7 @@ export function AdminQuizzes() {
           <div className="min-w-0 flex-1">
             <h3 className="break-words font-semibold">{q.quizName}</h3>
             {q.description ? (
-              <p className="mt-0.5 break-words text-sm text-gray-600">{q.description}</p>
+              <p className="mt-0.5 break-words text-sm text-gray-600 dark:text-zinc-400">{q.description}</p>
             ) : null}
             <div className="mt-1 flex flex-wrap items-center gap-2">
               {q.status ? (
@@ -81,28 +80,22 @@ export function AdminQuizzes() {
                 </Badge>
               ) : null}
               {q.scheduledStartAt && new Date(q.scheduledStartAt) > new Date() ? (
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-zinc-400">
                   Zakazano: {new Date(q.scheduledStartAt).toLocaleString()}
                 </span>
               ) : null}
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link
-              to={`/admin/quiz/${q.quizId}/preview`}
-              className="rounded border border-brand-quiz px-4 py-2 text-sm font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20"
-            >
+            <Link to={`/admin/quiz/${q.quizId}/preview`} className={buttonClasses("outline", "sm")}>
               Pregledaj
             </Link>
-            <Link
-              to={`/admin/quiz/${q.quizId}/edit`}
-              className="rounded bg-brand-nav px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-quiz"
-            >
+            <Link to={`/admin/quiz/${q.quizId}/edit`} className={buttonClasses("primary", "sm")}>
               Uredi pitanja
             </Link>
             <Button
               variant="danger"
-              className="text-sm"
+              size="sm"
               onClick={async () => {
                 if (confirm(`Obrisati ${q.quizName}?`)) await del.mutateAsync(q.quizId);
               }}
@@ -111,7 +104,7 @@ export function AdminQuizzes() {
             </Button>
             <Button
               variant="outline"
-              className="text-sm"
+              size="sm"
               onClick={() => setBankQuizId(bankQuizId === q.quizId ? null : q.quizId)}
             >
               Iz banke
