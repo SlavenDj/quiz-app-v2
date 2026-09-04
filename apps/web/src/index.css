@@ -8,3 +8,52 @@
   --brand-auth: #955CA6;
   --brand-muted: #B08BBE;
 }
+
+@layer base {
+  body {
+    @apply bg-gray-50 font-sans text-gray-900 antialiased;
+  }
+  ::selection {
+    background: var(--brand-muted);
+  }
+  :focus-visible {
+    outline: 2px solid var(--brand-quiz);
+    outline-offset: 2px;
+  }
+  /* TipTap rendered + editable content */
+  .tiptap p {
+    margin: 0.5em 0;
+  }
+  .tiptap ul,
+  .tiptap ol {
+    padding-left: 1.25rem;
+    margin: 0.5em 0;
+  }
+  .tiptap ul {
+    list-style: disc;
+  }
+  .tiptap ol {
+    list-style: decimal;
+  }
+  .tiptap:focus {
+    outline: none;
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply mx-auto w-full max-w-6xl px-4 py-6;
+  }
+  .auth-card {
+    @apply mx-auto w-full max-w-md rounded-xl border border-brand-muted bg-white p-6 shadow-card;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
