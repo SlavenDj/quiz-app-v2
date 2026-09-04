@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useLocation } from "react-router-dom";
 import { api } from "../../lib/api";
+import { Button } from "../../components/ui/Button";
+import { TextInput } from "../../components/ui/TextInput";
 
 const schema = z
   .object({
@@ -29,14 +31,18 @@ export function ResetPage() {
   });
 
   return (
-    <main>
-      <h1>Reset lozinke</h1>
+    <div className="auth-card">
+      <h1 className="text-2xl font-bold text-brand-quiz">Reset lozinke</h1>
       {done ? (
-        <p>
-          Lozinka uspješno promijenjena. <Link to="/login">Prijavite se</Link>
+        <p className="mt-4 text-sm text-gray-700">
+          Lozinka uspješno promijenjena.{" "}
+          <Link to="/login" className="font-medium text-brand-quiz hover:underline">
+            Prijavite se
+          </Link>
         </p>
       ) : (
         <form
+          className="mt-4 flex flex-col gap-4"
           onSubmit={handleSubmit(async (data) => {
             setError(null);
             try {
@@ -50,22 +56,48 @@ export function ResetPage() {
             }
           })}
         >
-          <label htmlFor="email">Email</label>
-          <input id="email" placeholder="Email" {...register("email")} />
-          {errors.email && <p>{errors.email.message}</p>}
-          <label htmlFor="code">Kod</label>
-          <input id="code" placeholder="6-cifreni kod" {...register("code")} />
-          {errors.code && <p>{errors.code.message}</p>}
-          <label htmlFor="newPassword">Nova lozinka</label>
-          <input id="newPassword" type="password" {...register("newPassword")} />
-          {errors.newPassword && <p>{errors.newPassword.message}</p>}
-          <label htmlFor="confirm">Potvrda lozinke</label>
-          <input id="confirm" type="password" {...register("confirm")} />
-          {errors.confirm && <p>{errors.confirm.message}</p>}
-          {error && <p>{error}</p>}
-          <button disabled={isSubmitting}>{isSubmitting ? "..." : "Resetuj lozinku"}</button>
+          <TextInput
+            id="email"
+            label="Email"
+            placeholder="Email"
+            className="w-full"
+            error={errors.email?.message}
+            {...register("email")}
+          />
+          <TextInput
+            id="code"
+            label="Kod"
+            placeholder="6-cifreni kod"
+            className="w-full"
+            error={errors.code?.message}
+            {...register("code")}
+          />
+          <TextInput
+            id="newPassword"
+            label="Nova lozinka"
+            type="password"
+            className="w-full"
+            error={errors.newPassword?.message}
+            {...register("newPassword")}
+          />
+          <TextInput
+            id="confirm"
+            label="Potvrda lozinke"
+            type="password"
+            className="w-full"
+            error={errors.confirm?.message}
+            {...register("confirm")}
+          />
+          {error && (
+            <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </p>
+          )}
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            {isSubmitting ? "..." : "Resetuj lozinku"}
+          </Button>
         </form>
       )}
-    </main>
+    </div>
   );
 }

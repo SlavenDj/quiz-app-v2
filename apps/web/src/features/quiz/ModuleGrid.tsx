@@ -1,18 +1,25 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useEditions, useModules } from "./api";
+import { Badge, statusTone } from "../../components/ui/Badge";
+import { Card } from "../../components/ui/Card";
+import { Spinner } from "../../components/ui/Spinner";
 
 export function ModuleGrid() {
   const [edition, setEdition] = useState<string | undefined>(undefined);
   const { data: editions } = useEditions();
   const { data, isLoading, error } = useModules(edition);
-  if (isLoading) return <p>Ucitavanje...</p>;
-  if (error) return <p>Greska: {(error as Error).message}</p>;
-  if (!data?.length) return <p>Nema dostupnih modula.</p>;
+  if (isLoading) return <Spinner label="Ucitavanje..." />;
+  if (error) return <p className="page-container text-status-danger">Greska: {(error as Error).message}</p>;
+  if (!data?.length) return <p className="page-container text-gray-500">Nema dostupnih modula.</p>;
   return (
-    <div>
-      <h1>Moduli</h1>
-      <select value={edition ?? ""} onChange={(e) => setEdition(e.target.value || undefined)}>
+    <div className="page-container">
+      <h1 className="mb-4 text-2xl font-bold text-gray-900">Moduli</h1>
+      <select
+        value={edition ?? ""}
+        onChange={(e) => setEdition(e.target.value || undefined)}
+        className="mb-4 min-h-[44px] w-full rounded-card border border-brand-muted bg-white px-3 py-2 text-base text-gray-900 shadow-card sm:max-w-xs"
+      >
         <option value="">Sve edicije</option>
         {(editions ?? []).map((ed: string) => (
           <option key={ed} value={ed}>
@@ -20,18 +27,34 @@ export function ModuleGrid() {
           </option>
         ))}
       </select>
-      {data.map((m: any) => (
-        <div key={m.id}>
-          <h2>
-            Modul {m.moduleNumber}: {m.name}
-          </h2>
-          <p>{m.shortDesc}</p>
-          <p>
-            Status: {m.status} | Kvizova: {m.totalQuizzes}
-          </p>
-          {m.status === "Locked" ? <span>Zakljucano</span> : <Link to={`/modules/${m.id}`}>Pogledaj kvizove</Link>}
-        </div>
-      ))}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {data.map((m: any) => (
+          <Card key={m.id} className="flex min-w-0 flex-col gap-2 rounded-card shadow-card">
+            <h2 className="break-words text-lg font-semibold text-gray-900">
+              Modul {m.moduleNumber}: {m.name}
+            </h2>
+            <p className="min-w-0 break-words text-sm text-gray-600">{m.shortDesc}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge tone={statusTone(m.status)}>{m.status}</Badge>
+              <span className="text-sm text-gray-500">Kvizova: {m.totalQuizzes}</span>
+            </div>
+            <div className="mt-auto pt-2">
+              {m.status === "Locked" ? (
+                <span className="inline-flex min-h-[44px] items-center rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500">
+                  Zakljucano
+                </span>
+              ) : (
+                <Link
+                  to={`/modules/${m.id}`}
+                  className="inline-flex min-h-[44px] items-center justify-center rounded bg-brand-nav px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-quiz"
+                >
+                  Pogledaj kvizove
+                </Link>
+              )}
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

@@ -5,6 +5,8 @@ import { loginSchema } from "validation";
 import { useNavigate, Link, Navigate } from "react-router-dom";
 import { useLogin } from "./hooks";
 import { useAuthStore } from "../../stores/auth";
+import { Button } from "../../components/ui/Button";
+import { TextInput } from "../../components/ui/TextInput";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -19,21 +21,51 @@ export function LoginPage() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit(async (data) => {
-        const res = await login.mutateAsync(data);
-        const role = res?.user?.role;
-        navigate(role === "admin" ? "/admin/modules" : "/home");
-      })}
-    >
-      <h1>Prijava</h1>
-      <input placeholder="Email" {...register("email")} />
-      {errors.email && <p>{errors.email.message}</p>}
-      <input type="password" placeholder="Lozinka" {...register("password")} />
-      {errors.password && <p>{errors.password.message}</p>}
-      {login.isError && <p>{(login.error as Error).message}</p>}
-      <button disabled={login.isPending}>{login.isPending ? "..." : "Prijavi se"}</button>
-      <Link to="/register">Registruj se</Link> | <Link to="/forgot">Zaboravljena lozinka?</Link>
-    </form>
+    <div className="auth-card">
+      <h1 className="text-2xl font-bold text-brand-quiz">Prijava</h1>
+      <form
+        className="mt-4 flex flex-col gap-4"
+        onSubmit={handleSubmit(async (data) => {
+          const res = await login.mutateAsync(data);
+          const role = res?.user?.role;
+          navigate(role === "admin" ? "/admin/modules" : "/home");
+        })}
+      >
+        <TextInput
+          id="email"
+          label="Email"
+          placeholder="Email"
+          className="w-full"
+          error={errors.email?.message}
+          {...register("email")}
+        />
+        <TextInput
+          id="password"
+          label="Lozinka"
+          type="password"
+          placeholder="Lozinka"
+          className="w-full"
+          error={errors.password?.message}
+          {...register("password")}
+        />
+        {login.isError && (
+          <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+            {(login.error as Error).message}
+          </p>
+        )}
+        <Button type="submit" disabled={login.isPending} className="w-full">
+          {login.isPending ? "..." : "Prijavi se"}
+        </Button>
+        <p className="text-center text-sm text-gray-600">
+          <Link to="/register" className="font-medium text-brand-quiz hover:underline">
+            Registruj se
+          </Link>
+          {" | "}
+          <Link to="/forgot" className="font-medium text-brand-quiz hover:underline">
+            Zaboravljena lozinka?
+          </Link>
+        </p>
+      </form>
+    </div>
   );
 }

@@ -3,6 +3,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useChangePassword } from "./api";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { TextInput } from "../../components/ui/TextInput";
 
 const schema = z
   .object({
@@ -24,8 +27,15 @@ export function ChangePassword() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  const live = watch();
+  // TextInput doesn't forward refs (React 18), so strip RHF's ref and drive
+  // the displayed value from the form state instead.
+  const { ref: _refCurrent, ...currentReg } = register("currentPassword");
+  const { ref: _refNew, ...newReg } = register("newPassword");
+  const { ref: _refConfirm, ...confirmReg } = register("confirm");
 
   async function onSubmit(values: FormValues) {
     setMessage(null);
@@ -41,30 +51,59 @@ export function ChangePassword() {
     }
   }
 
+  const isSuccess = message === "Lozinka promenjena.";
+
   return (
-    <section>
-      <h3>Promena lozinke</h3>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div>
-          <label htmlFor="currentPassword">Trenutna lozinka</label>
-          <input id="currentPassword" type="password" {...register("currentPassword")} />
-          {errors.currentPassword && <p>{errors.currentPassword.message}</p>}
-        </div>
-        <div>
-          <label htmlFor="newPassword">Nova lozinka</label>
-          <input id="newPassword" type="password" {...register("newPassword")} />
-          {errors.newPassword && <p>{errors.newPassword.message}</p>}
-        </div>
-        <div>
-          <label htmlFor="confirm">Potvrda lozinke</label>
-          <input id="confirm" type="password" {...register("confirm")} />
-          {errors.confirm && <p>{errors.confirm.message}</p>}
-        </div>
-        <button type="submit" disabled={mutation.isPending}>
+    <Card title="Lozinka" className="shadow-card">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <TextInput
+          id="currentPassword"
+          label="Trenutna lozinka"
+          type="password"
+          autoComplete="current-password"
+          error={errors.currentPassword?.message}
+          {...currentReg}
+          value={live.currentPassword ?? ""}
+        />
+        <TextInput
+          id="newPassword"
+          label="Nova lozinka"
+          type="password"
+          autoComplete="new-password"
+          error={errors.newPassword?.message}
+          {...newReg}
+          value={live.newPassword ?? ""}
+        />
+        <TextInput
+          id="confirm"
+          label="Potvrda lozinke"
+          type="password"
+          autoComplete="new-password"
+          error={errors.confirm?.message}
+          {...confirmReg}
+          value={live.confirm ?? ""}
+        />
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={mutation.isPending}
+          className="w-full sm:w-auto"
+        >
           {mutation.isPending ? "Čuvanje..." : "Promeni lozinku"}
-        </button>
+        </Button>
       </form>
-      {message && <p role="status">{message}</p>}
-    </section>
+      {message && (
+        <p
+          role="status"
+          className={
+            isSuccess
+              ? "mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-status-success ring-1 ring-green-200"
+              : "mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-status-danger ring-1 ring-red-200"
+          }
+        >
+          {message}
+        </p>
+      )}
+    </Card>
   );
 }

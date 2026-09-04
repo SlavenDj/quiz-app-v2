@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
+import { Button } from "../../components/ui/Button";
+import { TextInput } from "../../components/ui/TextInput";
 
 const schema = z.object({ email: z.string().email("Neispravan email") });
 type Form = z.infer<typeof schema>;
@@ -18,9 +20,10 @@ export function ForgotPage() {
   });
 
   return (
-    <main>
-      <h1>Zaboravljena lozinka</h1>
+    <div className="auth-card">
+      <h1 className="text-2xl font-bold text-brand-quiz">Zaboravljena lozinka</h1>
       <form
+        className="mt-4 flex flex-col gap-4"
         onSubmit={handleSubmit(async (data) => {
           setError(null);
           try {
@@ -36,18 +39,31 @@ export function ForgotPage() {
           }
         })}
       >
-        <label htmlFor="email">Email</label>
-        <input id="email" placeholder="Email" {...register("email")} />
-        {errors.email && <p>{errors.email.message}</p>}
-        {error && <p>{error}</p>}
-        <button disabled={isSubmitting}>{isSubmitting ? "..." : "Pošalji kod"}</button>
+        <TextInput
+          id="email"
+          label="Email"
+          placeholder="Email"
+          className="w-full"
+          error={errors.email?.message}
+          {...register("email")}
+        />
+        {error && (
+          <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error}
+          </p>
+        )}
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? "..." : "Pošalji kod"}
+        </Button>
       </form>
       {sent && (
-        <section>
+        <section className="mt-4 rounded bg-gray-50 px-3 py-2 text-sm text-gray-700">
           <p>Kod je poslan na vaš email.</p>
-          <Link to="/reset" state={{ email: sentEmail }}>Idi na reset</Link>
+          <Link to="/reset" state={{ email: sentEmail }} className="font-medium text-brand-quiz hover:underline">
+            Idi na reset
+          </Link>
         </section>
       )}
-    </main>
+    </div>
   );
 }

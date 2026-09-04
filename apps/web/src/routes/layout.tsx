@@ -7,8 +7,10 @@ export function RootLayout() {
   return (
     <ToastProvider>
       <Navbar />
-      <main>
-        <Outlet />
+      <main className="min-h-screen bg-gray-50">
+        <div className="page-container">
+          <Outlet />
+        </div>
       </main>
       <Footer />
     </ToastProvider>

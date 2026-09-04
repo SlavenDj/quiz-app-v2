@@ -6,6 +6,8 @@ import { registerSchema } from "validation";
 import { useNavigate, Link, Navigate } from "react-router-dom";
 import { useRegister } from "./hooks";
 import { useAuthStore } from "../../stores/auth";
+import { Button } from "../../components/ui/Button";
+import { TextInput } from "../../components/ui/TextInput";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -21,34 +23,88 @@ export function RegisterPage() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit(async (data) => {
-        setLocalError(null);
-        const res = await reg.mutateAsync(data);
-        if (Number.isFinite(res?.userId)) {
-          navigate(`/verify/${res.userId}`);
-        } else {
-          setLocalError("Registracija nije uspjela. Pokušajte ponovo.");
-        }
-      })}
-    >
-      <h1>Registracija</h1>
-      <input placeholder="Ime" {...register("firstName")} />
-      {errors.firstName && <p>{errors.firstName.message}</p>}
-      <input placeholder="Prezime" {...register("lastName")} />
-      {errors.lastName && <p>{errors.lastName.message}</p>}
-      <input placeholder="Email" {...register("email")} />
-      {errors.email && <p>{errors.email.message}</p>}
-      <input type="password" placeholder="Lozinka (min 8)" {...register("password")} />
-      {errors.password && <p>{errors.password.message}</p>}
-      <input placeholder="Drzava" {...register("country")} />
-      {errors.country && <p>{errors.country.message}</p>}
-      <input placeholder="Grad" {...register("city")} />
-      {errors.city && <p>{errors.city.message}</p>}
-      {reg.isError && <p>{(reg.error as Error).message}</p>}
-      {localError && <p>{localError}</p>}
-      <button disabled={reg.isPending}>{reg.isPending ? "..." : "Registruj se"}</button>
-      <Link to="/login">Vec imas nalog?</Link>
-    </form>
+    <div className="auth-card">
+      <h1 className="text-2xl font-bold text-brand-quiz">Registracija</h1>
+      <form
+        className="mt-4 flex flex-col gap-4"
+        onSubmit={handleSubmit(async (data) => {
+          setLocalError(null);
+          const res = await reg.mutateAsync(data);
+          if (Number.isFinite(res?.userId)) {
+            navigate(`/verify/${res.userId}`);
+          } else {
+            setLocalError("Registracija nije uspjela. Pokušajte ponovo.");
+          }
+        })}
+      >
+        <TextInput
+          id="firstName"
+          label="Ime"
+          placeholder="Ime"
+          className="w-full"
+          error={errors.firstName?.message}
+          {...register("firstName")}
+        />
+        <TextInput
+          id="lastName"
+          label="Prezime"
+          placeholder="Prezime"
+          className="w-full"
+          error={errors.lastName?.message}
+          {...register("lastName")}
+        />
+        <TextInput
+          id="email"
+          label="Email"
+          placeholder="Email"
+          className="w-full"
+          error={errors.email?.message}
+          {...register("email")}
+        />
+        <TextInput
+          id="password"
+          label="Lozinka"
+          type="password"
+          placeholder="Lozinka (min 8)"
+          className="w-full"
+          error={errors.password?.message}
+          {...register("password")}
+        />
+        <TextInput
+          id="country"
+          label="Država"
+          placeholder="Drzava"
+          className="w-full"
+          error={errors.country?.message}
+          {...register("country")}
+        />
+        <TextInput
+          id="city"
+          label="Grad"
+          placeholder="Grad"
+          className="w-full"
+          error={errors.city?.message}
+          {...register("city")}
+        />
+        {reg.isError && (
+          <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+            {(reg.error as Error).message}
+          </p>
+        )}
+        {localError && (
+          <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+            {localError}
+          </p>
+        )}
+        <Button type="submit" disabled={reg.isPending} className="w-full">
+          {reg.isPending ? "..." : "Registruj se"}
+        </Button>
+        <p className="text-center text-sm text-gray-600">
+          <Link to="/login" className="font-medium text-brand-quiz hover:underline">
+            Vec imas nalog?
+          </Link>
+        </p>
+      </form>
+    </div>
   );
 }

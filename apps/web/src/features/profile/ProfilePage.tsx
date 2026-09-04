@@ -6,6 +6,11 @@ import { useMe } from "../auth/hooks";
 import { useUpdateMe, type ProfileUser } from "./api";
 import { AvatarUpload } from "./AvatarUpload";
 import { ChangePassword } from "./ChangePassword";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { TextInput } from "../../components/ui/TextInput";
+import { Spinner } from "../../components/ui/Spinner";
+import { Badge } from "../../components/ui/Badge";
 
 const schema = z.object({
   firstName: z.string().optional(),
@@ -28,13 +33,24 @@ const FIELDS: (keyof FormValues)[] = [
   "username",
 ];
 
+const FIELD_LABELS: Record<keyof FormValues, string> = {
+  firstName: "Ime",
+  lastName: "Prezime",
+  country: "Država",
+  city: "Grad",
+  bio: "Biografija",
+  nickname: "Nadimak",
+  username: "Korisničko ime",
+};
+
 export function ProfilePage() {
   const { data: user, isLoading, isError, error } = useMe();
   const mutation = useUpdateMe();
   const [message, setMessage] = useState<string | null>(null);
-  const { register, handleSubmit, reset } = useForm<FormValues>({
+  const { register, handleSubmit, reset, watch } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
+  const live = watch();
 
   useEffect(() => {
     if (user) {
@@ -61,32 +77,87 @@ export function ProfilePage() {
     }
   }
 
-  if (isLoading) return <p>Učitavanje...</p>;
-  if (isError) return <p>Greška: {(error as Error)?.message ?? "Neuspješno učitavanje profila."}</p>;
+  if (isLoading) {
+    return (
+      <main className="page-container">
+        <Spinner label="Učitavanje..." />
+      </main>
+    );
+  }
+  if (isError) {
+    return (
+      <main className="page-container">
+        <p
+          role="alert"
+          className="rounded-md bg-red-50 px-3 py-2 text-sm text-status-danger ring-1 ring-red-200"
+        >
+          Greška: {(error as Error)?.message ?? "Neuspješno učitavanje profila."}
+        </p>
+      </main>
+    );
+  }
+
+  const profile = user as ProfileUser | undefined;
+  const isSuccess = message === "Profil sačuvan.";
 
   return (
-    <main>
-      <h2>Moj profil</h2>
-      <p>{(user as ProfileUser | undefined)?.email}</p>
+    <main className="page-container">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Moj profil</h1>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <p className="text-sm text-gray-600">{profile?.email}</p>
+          {profile?.role && <Badge tone="brand">{profile.role}</Badge>}
+        </div>
+      </div>
 
-      <section>
-        <h3>Podaci</h3>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {FIELDS.map((name) => (
-            <div key={name}>
-              <label htmlFor={name}>{name}</label>
-              <input id={name} {...register(name)} />
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+        <Card title="Profil" className="shadow-card">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {FIELDS.map((name) => {
+                // TextInput doesn't forward refs (React 18), so strip RHF's ref
+                // and drive the displayed value from the form state instead.
+                const { ref: _fieldRef, ...fieldProps } = register(name);
+                return (
+                  <div key={name} className={name === "bio" ? "sm:col-span-2" : undefined}>
+                    <TextInput
+                      id={name}
+                      label={FIELD_LABELS[name]}
+                      {...fieldProps}
+                      value={live[name] ?? ""}
+                    />
+                  </div>
+                );
+              })}
             </div>
-          ))}
-          <button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? "Čuvanje..." : "Sačuvaj"}
-          </button>
-        </form>
-        {message && <p role="status">{message}</p>}
-      </section>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={mutation.isPending}
+              className="w-full sm:w-auto"
+            >
+              {mutation.isPending ? "Čuvanje..." : "Sačuvaj"}
+            </Button>
+            {message && (
+              <p
+                role="status"
+                className={
+                  isSuccess
+                    ? "rounded-md bg-green-50 px-3 py-2 text-sm text-status-success ring-1 ring-green-200"
+                    : "rounded-md bg-red-50 px-3 py-2 text-sm text-status-danger ring-1 ring-red-200"
+                }
+              >
+                {message}
+              </p>
+            )}
+          </form>
+        </Card>
 
-      <AvatarUpload />
-      <ChangePassword />
+        <div className="flex flex-col gap-6">
+          <AvatarUpload />
+          <ChangePassword />
+        </div>
+      </div>
     </main>
   );
 }
