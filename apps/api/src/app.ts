@@ -19,6 +19,13 @@ app.use("/api/me", meRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api", quizRoutes);
 app.get("/health", (_req, res) => res.json({ ok: true }));
+// Public images are embedded cross-origin (<img> from the web app origin),
+// so CORP must allow it here (helmet defaults to same-origin, which would
+// break every avatar/question image with a silent decode error).
+app.use("/uploads", (_req, res, next) => {
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+});
 app.use("/uploads", express.static("public/uploads"));
 app.use(errorHandler);
 
