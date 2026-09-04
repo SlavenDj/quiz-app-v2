@@ -47,10 +47,9 @@ export function ProfilePage() {
   const { data: user, isLoading, isError, error } = useMe();
   const mutation = useUpdateMe();
   const [message, setMessage] = useState<string | null>(null);
-  const { register, handleSubmit, reset, watch } = useForm<FormValues>({
+  const { register, handleSubmit, reset } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
-  const live = watch();
 
   useEffect(() => {
     if (user) {
@@ -114,21 +113,11 @@ export function ProfilePage() {
         <Card title="Profil" className="shadow-card">
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {FIELDS.map((name) => {
-                // TextInput doesn't forward refs (React 18), so strip RHF's ref
-                // and drive the displayed value from the form state instead.
-                const { ref: _fieldRef, ...fieldProps } = register(name);
-                return (
-                  <div key={name} className={name === "bio" ? "sm:col-span-2" : undefined}>
-                    <TextInput
-                      id={name}
-                      label={FIELD_LABELS[name]}
-                      {...fieldProps}
-                      value={live[name] ?? ""}
-                    />
-                  </div>
-                );
-              })}
+              {FIELDS.map((name) => (
+                <div key={name} className={name === "bio" ? "sm:col-span-2" : undefined}>
+                  <TextInput id={name} label={FIELD_LABELS[name]} {...register(name)} />
+                </div>
+              ))}
             </div>
             <Button
               type="submit"
