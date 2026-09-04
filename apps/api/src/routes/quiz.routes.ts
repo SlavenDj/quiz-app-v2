@@ -88,3 +88,11 @@ quizRoutes.get(
     res.json(await quiz.getLeaderboard(limit));
   })
 );
+
+quizRoutes.get(
+  "/users/:id",
+  validate(idParam, "params"),
+  asyncHandler(async (req, res) => {
+    res.json(await quiz.getUserPublic(Number(req.params.id)));
+  })
+);

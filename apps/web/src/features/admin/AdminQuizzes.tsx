@@ -70,6 +70,12 @@ export function AdminQuizzes() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
+              to={`/admin/quiz/${q.quizId}/preview`}
+              className="rounded border border-brand-quiz px-4 py-2 text-sm font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20"
+            >
+              Pregledaj
+            </Link>
+            <Link
               to={`/admin/quiz/${q.quizId}/edit`}
               className="rounded bg-brand-nav px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-quiz"
             >

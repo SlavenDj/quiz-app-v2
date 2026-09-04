@@ -12,11 +12,13 @@ import { ModuleDetail } from "../features/quiz/ModuleDetail";
 import { QuizStart } from "../features/quiz/QuizStart";
 import { QuizPlay } from "../features/quiz/QuizPlay";
 import { QuizResult } from "../features/quiz/QuizResult";
+import { UserDetail } from "../features/quiz/UserDetail";
 import { Leaderboard } from "../features/quiz/Leaderboard";
 import { ProfilePage } from "../features/profile/ProfilePage";
 import { AdminModules } from "../features/admin/AdminModules";
 import { AdminQuizzes } from "../features/admin/AdminQuizzes";
 import { EditQuiz } from "../features/admin/EditQuiz";
+import { AdminPreview } from "../features/admin/AdminPreview";
 import NotFound from "../components/NotFound";
 
 export const router = createBrowserRouter([
@@ -37,6 +39,7 @@ export const router = createBrowserRouter([
           { path: "/quiz/:id", element: <QuizStart /> },
           { path: "/quiz/:id/play", element: <QuizPlay /> },
           { path: "/results/:attemptId", element: <QuizResult /> },
+          { path: "/userinfo/:userId", element: <UserDetail /> },
           { path: "/leaderboard", element: <Leaderboard /> },
           { path: "/profile", element: <ProfilePage /> },
         ],
@@ -49,6 +52,7 @@ export const router = createBrowserRouter([
           { path: "modules", element: <AdminModules /> },
           { path: "modules/:id", element: <AdminQuizzes /> },
           { path: "quiz/:id/edit", element: <EditQuiz /> },
+          { path: "quiz/:id/preview", element: <AdminPreview /> },
         ],
       },
       { path: "*", element: <NotFound /> },

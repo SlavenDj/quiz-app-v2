@@ -267,6 +267,31 @@ export async function getAttemptReview(attemptId: number, userId: number) {
   };
 }
 
+export async function getUserPublic(userId: number) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw httpError(404, "Korisnik nije pronadjen.");
+  const firsts = await prisma.attempt.findMany({
+    where: { userId, attemptNo: 1, submittedAt: { not: null } },
+  });
+  const totalScore = firsts.reduce((s, a) => s + a.score, 0);
+  const board = await getLeaderboard(1000);
+  const rank = board.find((r) => r.userId === userId)?.rank ?? null;
+  return {
+    userId: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    username: user.username,
+    country: user.country,
+    city: user.city,
+    bio: user.bio,
+    avatarFile: user.avatarFile,
+    avatarUrl: imageUrl(user.avatarFile),
+    totalScore,
+    quizzesPlayed: firsts.length,
+    rank,
+  };
+}
+
 export async function getLeaderboard(limit = 50) {
   const firsts = await prisma.attempt.findMany({
     where: { attemptNo: 1, submittedAt: { not: null } },

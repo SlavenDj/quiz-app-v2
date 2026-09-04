@@ -17,6 +17,19 @@ export function useCreateModule() {
   });
 }
 
+export function useUpdateModule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: number; body: any }) =>
+      api(`/api/admin/modules/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "modules"] });
+      qc.invalidateQueries({ predicate: (query) => query.queryKey[0] === "modules" });
+      qc.invalidateQueries({ queryKey: ["editions"] });
+    },
+  });
+}
+
 export function useDeleteModule() {
   const qc = useQueryClient();
   return useMutation({

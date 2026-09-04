@@ -1,4 +1,6 @@
+import { useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
+import confetti from "canvas-confetti";
 import { useAttempt } from "./api";
 import { Badge } from "../../components/ui/Badge";
 import { Card } from "../../components/ui/Card";
@@ -7,9 +9,16 @@ import { Spinner } from "../../components/ui/Spinner";
 export function QuizResult() {
   const { attemptId } = useParams();
   const { data, isLoading, error } = useAttempt(Number(attemptId));
+  const firedRef = useRef(false);
+  const passed = data && data.maxScore > 0 ? data.score / data.maxScore >= 0.5 : false;
+  useEffect(() => {
+    if (passed && !firedRef.current) {
+      firedRef.current = true;
+      confetti();
+    }
+  }, [passed]);
   if (isLoading) return <Spinner label="Ucitavanje..." />;
   if (error) return <p className="page-container text-status-danger">Greska: {(error as Error).message}</p>;
-  const passed = data.maxScore > 0 ? data.score / data.maxScore >= 0.5 : false;
   return (
     <div className="page-container">
       <Card className="mx-auto w-full max-w-2xl rounded-card text-center shadow-card">

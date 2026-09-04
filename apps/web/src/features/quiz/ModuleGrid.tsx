@@ -4,6 +4,13 @@ import { useEditions, useModules } from "./api";
 import { Badge, statusTone } from "../../components/ui/Badge";
 import { Card } from "../../components/ui/Card";
 import { Spinner } from "../../components/ui/Spinner";
+import { useCountdown } from "../../lib/useCountdown";
+
+function ModuleCountdown({ startAt }: { startAt: string | Date }) {
+  const left = useCountdown(startAt);
+  if (!left) return null;
+  return <p className="text-sm text-gray-500">🔒 Otključava se za {left}</p>;
+}
 
 export function ModuleGrid() {
   const [edition, setEdition] = useState<string | undefined>(undefined);
@@ -40,9 +47,12 @@ export function ModuleGrid() {
             </div>
             <div className="mt-auto pt-2">
               {m.status === "Locked" ? (
-                <span className="inline-flex min-h-[44px] items-center rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500">
-                  Zakljucano
-                </span>
+                <div className="flex flex-col items-start gap-1">
+                  <span className="inline-flex min-h-[44px] items-center rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500">
+                    Zakljucano
+                  </span>
+                  {m.startAt ? <ModuleCountdown startAt={m.startAt} /> : null}
+                </div>
               ) : (
                 <Link
                   to={`/modules/${m.id}`}
