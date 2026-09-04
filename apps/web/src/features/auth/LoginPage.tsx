@@ -6,6 +6,7 @@ import { loginSchema } from "validation";
 import { useNavigate, Link, Navigate } from "react-router-dom";
 import { useLogin } from "./hooks";
 import { useAuthStore } from "../../stores/auth";
+import { isDemo } from "../../lib/demo";
 import { Button } from "../../components/ui/Button";
 import { TextInput } from "../../components/ui/TextInput";
 
@@ -74,7 +75,7 @@ export function LoginPage() {
         <Button type="submit" disabled={login.isPending} className="w-full">
           {login.isPending ? "..." : "Prijavi se"}
         </Button>
-        {import.meta.env.DEV && (
+        {(import.meta.env.DEV || isDemo) && (
           <div className="rounded-md bg-gray-50 px-3 py-2 text-sm">
             <p className="mb-2 font-medium text-gray-600">Dev brza prijava:</p>
             <div className="flex gap-2">

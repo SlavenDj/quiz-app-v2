@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
 import { useLeaderboard } from "./api";
 import { useAuthStore } from "../../stores/auth";
+import { avatarSrc } from "../../lib/avatar";
 import { Card } from "../../components/ui/Card";
 import { Spinner } from "../../components/ui/Spinner";
-
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 const MEDAL_STYLES = [
   "bg-amber-100 text-amber-800 border-amber-300",
@@ -43,9 +42,9 @@ export function Leaderboard() {
               >
                 {i + 1}
               </span>
-              {r.avatarFile ? (
+              {avatarSrc(r.avatarFile, `${r.firstName} ${r.lastName}`) ? (
                 <img
-                  src={`${API_URL}/uploads/${r.avatarFile}`}
+                  src={avatarSrc(r.avatarFile, `${r.firstName} ${r.lastName}`)!}
                   alt=""
                   className="h-12 w-12 rounded-full object-cover"
                 />
@@ -77,9 +76,9 @@ export function Leaderboard() {
                   isMe ? "border-brand-nav ring-2 ring-brand-nav" : "border-brand-muted/40"
                 }`}
               >
-              {r.avatarFile ? (
+              {avatarSrc(r.avatarFile, `${r.firstName} ${r.lastName}`) ? (
                 <img
-                  src={`${API_URL}/uploads/${r.avatarFile}`}
+                  src={avatarSrc(r.avatarFile, `${r.firstName} ${r.lastName}`)!}
                   alt=""
                   className="h-8 w-8 shrink-0 rounded-full object-cover"
                 />

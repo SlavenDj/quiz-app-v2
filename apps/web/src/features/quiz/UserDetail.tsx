@@ -4,6 +4,7 @@ import { api } from "../../lib/api";
 import { Badge } from "../../components/ui/Badge";
 import { Card } from "../../components/ui/Card";
 import { Spinner } from "../../components/ui/Spinner";
+import { avatarSrc } from "../../lib/avatar";
 
 interface UserDetailData {
   userId: number;
@@ -38,12 +39,13 @@ export function UserDetail() {
   const u = data;
   const initial = (u.firstName?.[0] ?? "?").toUpperCase();
   const location = [u.country, u.city].filter(Boolean).join(", ");
+  const avatar = avatarSrc(u.avatarFile, `${u.firstName} ${u.lastName}`) ?? u.avatarUrl;
 
   return (
     <div className="page-container">
       <Card className="mx-auto w-full max-w-2xl rounded-card text-center shadow-card">
-        {u.avatarUrl ? (
-          <img src={u.avatarUrl} alt="" className="mx-auto h-20 w-20 rounded-full object-cover" />
+        {avatar ? (
+          <img src={avatar} alt="" className="mx-auto h-20 w-20 rounded-full object-cover" />
         ) : (
           <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-brand-muted/25 text-2xl font-bold text-brand-quiz">
             {initial}

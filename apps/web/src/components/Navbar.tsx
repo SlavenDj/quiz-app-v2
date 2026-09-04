@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/auth";
 import { useLogout } from "../features/auth/hooks";
+import { isDemo } from "../lib/demo";
 
 export default function Navbar() {
   const user = useAuthStore((s) => s.user);
@@ -27,6 +28,11 @@ export default function Navbar() {
         <Link to={user ? "/home" : "/"} className="text-xl font-bold tracking-wide">
           +ULTRA
         </Link>
+        {isDemo && (
+          <span className="rounded bg-white/25 px-2 py-0.5 text-xs font-bold tracking-widest">
+            DEMO
+          </span>
+        )}
         <div className="flex items-center gap-4 text-sm">
           {!user ? (
             <>

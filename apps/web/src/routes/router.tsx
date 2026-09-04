@@ -21,41 +21,47 @@ import { EditQuiz } from "../features/admin/EditQuiz";
 import { AdminPreview } from "../features/admin/AdminPreview";
 import NotFound from "../components/NotFound";
 
-export const router = createBrowserRouter([
-  {
-    element: <RootLayout />,
-    children: [
-      { path: "/", element: <LandingPage /> },
-      { path: "/login", element: <LoginPage /> },
-      { path: "/register", element: <RegisterPage /> },
-      { path: "/verify/:id", element: <VerifyPage /> },
-      { path: "/forgot", element: <ForgotPage /> },
-      { path: "/reset", element: <ResetPage /> },
-      {
-        element: <RequireAuth />,
-        children: [
-          { path: "/home", element: <ModuleGrid /> },
-          { path: "/modules/:id", element: <ModuleDetail /> },
-          { path: "/quiz/:id", element: <QuizStart /> },
-          { path: "/quiz/:id/play", element: <QuizPlay /> },
-          { path: "/results/:attemptId", element: <QuizResult /> },
-          { path: "/userinfo/:userId", element: <UserDetail /> },
-          { path: "/leaderboard", element: <Leaderboard /> },
-          { path: "/profile", element: <ProfilePage /> },
-        ],
-      },
-      {
-        path: "/admin",
-        element: <RequireAdmin />,
-        children: [
-          { index: true, element: <Navigate to="/admin/modules" replace /> },
-          { path: "modules", element: <AdminModules /> },
-          { path: "modules/:id", element: <AdminQuizzes /> },
-          { path: "quiz/:id/edit", element: <EditQuiz /> },
-          { path: "quiz/:id/preview", element: <AdminPreview /> },
-        ],
-      },
-      { path: "*", element: <NotFound /> },
-    ],
-  },
-]);
+// GitHub Pages project sites serve under /<repo>/ — basename comes from env.
+const basename = (import.meta.env.VITE_BASE_PATH as string | undefined)?.replace(/\/$/, "") || "/";
+
+export const router = createBrowserRouter(
+  [
+    {
+      element: <RootLayout />,
+      children: [
+        { path: "/", element: <LandingPage /> },
+        { path: "/login", element: <LoginPage /> },
+        { path: "/register", element: <RegisterPage /> },
+        { path: "/verify/:id", element: <VerifyPage /> },
+        { path: "/forgot", element: <ForgotPage /> },
+        { path: "/reset", element: <ResetPage /> },
+        {
+          element: <RequireAuth />,
+          children: [
+            { path: "/home", element: <ModuleGrid /> },
+            { path: "/modules/:id", element: <ModuleDetail /> },
+            { path: "/quiz/:id", element: <QuizStart /> },
+            { path: "/quiz/:id/play", element: <QuizPlay /> },
+            { path: "/results/:attemptId", element: <QuizResult /> },
+            { path: "/userinfo/:userId", element: <UserDetail /> },
+            { path: "/leaderboard", element: <Leaderboard /> },
+            { path: "/profile", element: <ProfilePage /> },
+          ],
+        },
+        {
+          path: "/admin",
+          element: <RequireAdmin />,
+          children: [
+            { index: true, element: <Navigate to="/admin/modules" replace /> },
+            { path: "modules", element: <AdminModules /> },
+            { path: "modules/:id", element: <AdminQuizzes /> },
+            { path: "quiz/:id/edit", element: <EditQuiz /> },
+            { path: "quiz/:id/preview", element: <AdminPreview /> },
+          ],
+        },
+        { path: "*", element: <NotFound /> },
+      ],
+    },
+  ],
+  { basename }
+);

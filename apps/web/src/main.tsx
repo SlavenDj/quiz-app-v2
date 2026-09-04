@@ -3,7 +3,10 @@ import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./routes/router";
+import { installDemoFetchShim, isDemo } from "./lib/demo";
 import "./index.css";
+
+if (isDemo) installDemoFetchShim();
 
 const qc = new QueryClient();
 

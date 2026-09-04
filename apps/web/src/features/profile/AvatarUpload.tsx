@@ -3,8 +3,8 @@ import { useMe } from "../auth/hooks";
 import { useDeleteAvatar, useUploadAvatar, type ProfileUser } from "./api";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
+import { avatarSrc } from "../../lib/avatar";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 
 export function AvatarUpload() {
@@ -19,6 +19,7 @@ export function AvatarUpload() {
 
   const identity = profile?.username || profile?.nickname || profile?.email || "";
   const initial = (identity.trim().charAt(0) || "?").toUpperCase();
+  const avatar = avatarSrc(avatarFile, identity);
 
   function onSelect(e: React.ChangeEvent<HTMLInputElement>) {
     setMessage(null);
@@ -59,9 +60,9 @@ export function AvatarUpload() {
     <Card title="Slika" className="shadow-card">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-4">
-          {avatarFile ? (
+          {avatar ? (
             <img
-              src={`${API_URL}/uploads/${avatarFile}`}
+              src={avatar}
               alt="Avatar"
               className="h-20 w-20 rounded-full object-cover ring-2 ring-brand-muted"
             />

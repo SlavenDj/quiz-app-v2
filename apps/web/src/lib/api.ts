@@ -1,6 +1,9 @@
+import { isDemo, mockApi } from "./demo";
+
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 export async function api(path: string, init: RequestInit = {}) {
+  if (isDemo) return mockApi(path, init);
   const res = await fetch(`${API_URL}${path}`, {
     credentials: "include",
     headers: { "Content-Type": "application/json", ...(init.headers ?? {}) },
