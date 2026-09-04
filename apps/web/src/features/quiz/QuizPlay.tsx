@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useStartPlay, useSubmitQuiz, type PlayPayload } from "./api";
+import { useParams } from "react-router-dom";
+import { useQuizPlay } from "./useQuizPlay";
 import { MultiInput, SingleInput, TextInput } from "./QuestionInputs";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -10,103 +9,10 @@ function fmt(sec: number) {
   return `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
 }
 
-type Answers = Record<number, { answerIds: number[]; text: string }>;
-
-function storageKey(quizId: number) {
-  return `play-${quizId}`;
-}
-
-function readStored(quizId: number): { attemptId: number; answers: Answers; index: number } | null {
-  try {
-    const raw = sessionStorage.getItem(storageKey(quizId));
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
 export function QuizPlay() {
   const { id } = useParams();
-  const quizId = Number(id);
-  const navigate = useNavigate();
-  const start = useStartPlay();
-  const submit = useSubmitQuiz(quizId);
-  const [play, setPlay] = useState<PlayPayload | null>(null);
-  const [index, setIndex] = useState(0);
-  const [answers, setAnswers] = useState<Answers>({});
-  const [left, setLeft] = useState(0);
-  const submitted = useRef(false);
-  const startedRef = useRef(false);
-
-  const handleStart = () => {
-    start.mutate(quizId, {
-      onSuccess: (p) => {
-        setPlay(p);
-        setLeft(p.timeLeftSec);
-        const stored = readStored(quizId);
-        if (stored && stored.attemptId === p.attemptId) {
-          setAnswers(stored.answers ?? {});
-          if (Number.isFinite(stored.index) && stored.index >= 0 && stored.index < p.questions.length) {
-            setIndex(stored.index);
-          }
-        }
-      },
-    });
-  };
-
-  useEffect(() => {
-    if (startedRef.current) return;
-    startedRef.current = true;
-    handleStart();
-    return () => {
-      startedRef.current = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quizId]);
-
-  useEffect(() => {
-    if (!play) return;
-    try {
-      sessionStorage.setItem(storageKey(quizId), JSON.stringify({ attemptId: play.attemptId, answers, index }));
-    } catch {
-      // storage unavailable — ignore
-    }
-  }, [answers, index, play, quizId]);
-
-  const doSubmit = async () => {
-    if (!play || submitted.current) return;
-    submitted.current = true;
-    try {
-      const res = await submit.mutateAsync({
-        attemptId: play.attemptId,
-        answers: play.questions.map((q) => ({
-          questionId: q.questionId,
-          answerIds: answers[q.questionId]?.answerIds ?? [],
-          text: answers[q.questionId]?.text ?? "",
-        })),
-      });
-      try {
-        sessionStorage.removeItem(storageKey(quizId));
-      } catch {
-        // ignore
-      }
-      navigate(`/results/${res.attemptId}`);
-    } catch {
-      submitted.current = false;
-    }
-  };
-
-  useEffect(() => {
-    if (!play) return;
-    if (left <= 0) {
-      doSubmit().catch(() => {});
-      return;
-    }
-    const t = setTimeout(() => setLeft((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [left, play]);
+  const { play, index, setIndex, answers, setAnswer, isAnswered, left, start, submit, handleStart, doSubmit } =
+    useQuizPlay(Number(id));
 
   if (start.isError) {
     return (
@@ -126,15 +32,7 @@ export function QuizPlay() {
 
   const q = play.questions[index];
   const val = answers[q.questionId] ?? { answerIds: [], text: "" };
-  const setVal = (v: typeof val) => setAnswers((s) => ({ ...s, [q.questionId]: v }));
-  const answered = play.questions.filter((x) => {
-    const a = answers[x.questionId];
-    return a && (a.answerIds.length > 0 || a.text.trim() !== "");
-  }).length;
-  const isAnswered = (questionId: number) => {
-    const a = answers[questionId];
-    return Boolean(a && (a.answerIds.length > 0 || a.text.trim() !== ""));
-  };
+  const answered = play.questions.filter((x) => isAnswered(x.questionId)).length;
   const lowTime = left < 60;
 
   return (
@@ -177,9 +75,9 @@ export function QuizPlay() {
           <img src={q.imageUrl} alt="" className="mt-3 w-full max-w-[300px] rounded-card object-cover" />
         )}
         <div className="mt-4">
-          {q.type === "single" && <SingleInput q={q} value={val} onChange={setVal} />}
-          {q.type === "multiple" && <MultiInput q={q} value={val} onChange={setVal} />}
-          {q.type === "text" && <TextInput value={val} onChange={setVal} />}
+          {q.type === "single" && <SingleInput q={q} value={val} onChange={(v) => setAnswer(q.questionId, v)} />}
+          {q.type === "multiple" && <MultiInput q={q} value={val} onChange={(v) => setAnswer(q.questionId, v)} />}
+          {q.type === "text" && <TextInput value={val} onChange={(v) => setAnswer(q.questionId, v)} />}
         </div>
       </Card>
       <div className="mt-4 flex gap-3">

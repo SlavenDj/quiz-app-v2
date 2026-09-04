@@ -5,6 +5,7 @@ import { requireAuth, type AuthRequest } from "../middleware/requireAuth.js";
 import { validate } from "../middleware/validate.js";
 import { submitSchema } from "validation";
 import * as quiz from "../services/quiz.service.js";
+import * as modules from "../services/modules.service.js";
 
 export const quizRoutes = Router();
 quizRoutes.use(requireAuth);
@@ -14,7 +15,7 @@ const idParam = z.object({ id: z.coerce.number().int().positive() });
 quizRoutes.get(
   "/editions",
   asyncHandler(async (_req, res) => {
-    res.json(await quiz.getEditions());
+    res.json(await modules.getEditions());
   })
 );
 
@@ -22,7 +23,7 @@ quizRoutes.get(
   "/modules",
   validate(z.object({ edition: z.string().min(1).max(20).optional() }), "query"),
   asyncHandler(async (req, res) => {
-    res.json(await quiz.listModules(req.query.edition as string | undefined));
+    res.json(await modules.listModules(req.query.edition as string | undefined));
   })
 );
 
@@ -30,7 +31,7 @@ quizRoutes.get(
   "/modules/:id",
   validate(idParam, "params"),
   asyncHandler(async (req: AuthRequest, res) => {
-    res.json(await quiz.getModuleDetail(Number(req.params.id), req.user!.id));
+    res.json(await modules.getModuleDetail(Number(req.params.id), req.user!.id));
   })
 );
 
@@ -38,7 +39,7 @@ quizRoutes.get(
   "/modules/:id/quizzes",
   validate(idParam, "params"),
   asyncHandler(async (req: AuthRequest, res) => {
-    const detail = await quiz.getModuleDetail(Number(req.params.id), req.user!.id);
+    const detail = await modules.getModuleDetail(Number(req.params.id), req.user!.id);
     res.json(detail.quizzes);
   })
 );
