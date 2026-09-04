@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "db:push": "prisma db push",
+    "db:sync-schemas": "sed 's/^  provider = \"sqlite\"$/  provider = \"mysql\"/' prisma/schema.prisma > prisma/schema.mysql.prisma && diff prisma/schema.prisma prisma/schema.mysql.prisma | grep -q '^2c2' && echo schemas-in-sync",
     "db:seed": "tsx prisma/seed.ts",
     "db:generate": "prisma generate",
     "db:generate:mysql": "prisma generate --schema=prisma/schema.mysql.prisma",

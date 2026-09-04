@@ -1,9 +1,15 @@
+# MySQL parity for migration generation + testing.
+# NOTE: mariadb is used instead of mysql:8 (arm64-native, small, fast pull;
+# cPanel hosts run MariaDB/MySQL interchangeably and Prisma treats both as `mysql`).
+# Local alternative without Docker: `brew install mariadb` (see README).
 services:
   mysql:
-    image: mysql:8
+    image: mariadb:11
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: quiz_db
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: quiz_db
+      MARIADB_USER: quiz
+      MARIADB_PASSWORD: quizpass
     ports:
       - "3307:3306"
     volumes:

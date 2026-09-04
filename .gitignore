@@ -5,6 +5,6 @@ package-lock.json
 *.db-journal
 .env
 .env.local
-apps/api/dev.db
+apps/api/prisma/dev.db
 apps/web/dist/
 coverage/
