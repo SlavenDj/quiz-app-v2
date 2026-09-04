@@ -11,6 +11,7 @@ import { Button } from "../../components/ui/Button";
 import { TextInput } from "../../components/ui/TextInput";
 import { Spinner } from "../../components/ui/Spinner";
 import { Badge } from "../../components/ui/Badge";
+import { avatarSrc } from "../../lib/avatar";
 
 const schema = z.object({
   firstName: z.string().optional(),
@@ -101,19 +102,50 @@ export function ProfilePage() {
 
   const profile = user as ProfileUser | undefined;
   const isSuccess = message === "Profil sačuvan.";
+  const displayName =
+    [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") ||
+    profile?.username ||
+    profile?.email ||
+    "Korisnik";
+  const heroAvatar = avatarSrc(profile?.avatarFile, displayName);
+  const heroInitial = (displayName.trim().charAt(0) || "?").toUpperCase();
 
   return (
     <main className="page-container">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Moj profil</h1>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <p className="text-sm text-gray-600">{profile?.email}</p>
-          {profile?.role && <Badge tone="brand">{profile.role}</Badge>}
+      <section className="relative mb-6 overflow-hidden rounded-card bg-gradient-to-r from-brand-nav via-brand-quiz to-brand-auth p-6 text-white shadow-card sm:p-8">
+        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+          {heroAvatar ? (
+            <img
+              src={heroAvatar}
+              alt=""
+              className="h-20 w-20 shrink-0 rounded-full border-4 border-white/60 object-cover"
+            />
+          ) : (
+            <div
+              role="img"
+              aria-label="Avatar"
+              className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-4 border-white/60 bg-white/20 text-3xl font-bold"
+            >
+              {heroInitial}
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/70">Moj profil</p>
+            <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">{displayName}</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/85">
+              <span className="truncate">{profile?.email}</span>
+              {profile?.role && (
+                <Badge tone="neutral">
+                  <span className="text-gray-700">{profile.role}</span>
+                </Badge>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
-        <Card title="Profil" className="shadow-card">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5">
+        <Card title="Lični podaci" className="shadow-card lg:col-span-3">
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {FIELDS.map((name) => (
@@ -122,22 +154,26 @@ export function ProfilePage() {
                 </div>
               ))}
             </div>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={mutation.isPending}
-              className="w-full sm:w-auto"
-            >
-              {mutation.isPending ? "Čuvanje..." : "Sačuvaj"}
-            </Button>
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex cursor-pointer items-center justify-between gap-3 rounded-card bg-gray-50 px-3 py-2.5 text-sm ring-1 ring-gray-200">
+              <span>
+                <span className="block font-medium text-gray-900">Obavijesti o novim kvizovima</span>
+                <span className="block text-xs text-gray-500">Email kada se objavi novi kviz</span>
+              </span>
               <input
                 type="checkbox"
                 checked={notifyNewQuiz}
                 onChange={(e) => setNotifyNewQuiz(e.target.checked)}
+                className="h-5 w-5 shrink-0 accent-brand-quiz"
               />
-              Obavijesti o novim kvizovima
             </label>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={mutation.isPending}
+              className="min-h-[44px] w-full sm:w-auto"
+            >
+              {mutation.isPending ? "Čuvanje..." : "Sačuvaj promjene"}
+            </Button>
             {message && (
               <p
                 role="status"
@@ -153,7 +189,7 @@ export function ProfilePage() {
           </form>
         </Card>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 lg:col-span-2">
           <AvatarUpload />
           <ChangePassword />
         </div>

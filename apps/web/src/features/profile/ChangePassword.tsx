@@ -21,6 +21,8 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
+const REQUIREMENTS = ["Najmanje 8 karaktera", "Potvrda se mora poklapati"];
+
 export function ChangePassword() {
   const [message, setMessage] = useState<string | null>(null);
   const [showPasswords, setShowPasswords] = useState(false);
@@ -51,7 +53,19 @@ export function ChangePassword() {
   const isSuccess = message === "Lozinka promenjena.";
 
   return (
-    <Card title="Lozinka" className="shadow-card">
+    <Card className="shadow-card">
+      <div className="mb-4 flex items-center gap-3">
+        <span
+          aria-hidden
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-muted/25 text-lg font-bold text-brand-quiz"
+        >
+          **
+        </span>
+        <div>
+          <h2 className="text-lg font-semibold">Lozinka</h2>
+          <p className="text-xs text-gray-500">Redovno je mijenjajte radi sigurnosti</p>
+        </div>
+      </div>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <TextInput
           id="currentPassword"
@@ -61,15 +75,26 @@ export function ChangePassword() {
           error={errors.currentPassword?.message}
           {...register("currentPassword")}
         />
-        <TextInput
-          id="newPassword"
-          label="Nova lozinka"
-          type={showPasswords ? "text" : "password"}
-          autoComplete="new-password"
-          error={errors.newPassword?.message}
-          {...register("newPassword")}
-        />
-        <PasswordStrength password={newPasswordValue ?? ""} />
+        <div>
+          <TextInput
+            id="newPassword"
+            label="Nova lozinka"
+            type={showPasswords ? "text" : "password"}
+            autoComplete="new-password"
+            error={errors.newPassword?.message}
+            {...register("newPassword")}
+          />
+          <div className="mt-2">
+            <PasswordStrength password={newPasswordValue ?? ""} />
+          </div>
+          <ul className="mt-2 flex flex-col gap-1">
+            {REQUIREMENTS.map((r) => (
+              <li key={r} className="text-xs text-gray-500">
+                • {r}
+              </li>
+            ))}
+          </ul>
+        </div>
         <TextInput
           id="confirm"
           label="Potvrda lozinke"
@@ -78,21 +103,24 @@ export function ChangePassword() {
           error={errors.confirm?.message}
           {...register("confirm")}
         />
-        <button
-          type="button"
-          onClick={() => setShowPasswords((s) => !s)}
-          className="self-start text-sm font-medium text-brand-quiz hover:underline"
-        >
-          {showPasswords ? "Sakrij lozinke" : "Prikaži lozinke"}
-        </button>
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={mutation.isPending}
-          className="w-full sm:w-auto"
-        >
-          {mutation.isPending ? "Čuvanje..." : "Promeni lozinku"}
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={mutation.isPending}
+            className="min-h-[44px] flex-1"
+          >
+            {mutation.isPending ? "Čuvanje..." : "Promeni lozinku"}
+          </Button>
+          <button
+            type="button"
+            onClick={() => setShowPasswords((s) => !s)}
+            className="min-h-[44px] rounded border border-brand-muted px-3 text-sm font-medium text-brand-quiz transition-colors hover:bg-brand-muted/20"
+            aria-pressed={showPasswords}
+          >
+            {showPasswords ? "Sakrij" : "Prikaži"}
+          </button>
+        </div>
       </form>
       {message && (
         <p
